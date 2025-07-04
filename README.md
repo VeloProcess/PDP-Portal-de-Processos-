@@ -9,7 +9,6 @@ Este projeto é uma plataforma de chatbot interativa e completa, projetada para 
 
 A ferramenta foi desenvolvida para ser intuitiva, rápida e facilmente gerenciável por pessoas da equipe, permitindo que a base de conhecimento seja atualizada em tempo real sem a necessidade de alterar o código.
 
-**[Acesse a demonstração ao vivo aqui](https://velobot05.github.io/Chatbot-Atendimento/)** *(Lembre-se de substituir pelo seu link real do GitHub Pages)*
 
 ---
 
