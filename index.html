@@ -192,7 +192,7 @@
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
         }
         
-        .action-button {
+        .action-button, .gemini-button {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -208,37 +208,22 @@
             text-decoration: none;
         }
         
-        .action-button:hover {
+        .gemini-button {
+            background-color: #FF6D00;
+        }
+        
+        .action-button:hover, .gemini-button:hover {
             background-color: var(--cor-azul-escuro);
             transform: scale(1.05);
         }
         
-        .action-button svg {
+        .gemini-button:hover {
+            background-color: #E65100;
+        }
+        
+        .action-button svg, .gemini-button svg {
             width: 20px;
             height: 20px;
-        }
-        
-        /* Novo estilo para o botão do Gemini */
-        .gemini-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background-color: #FF6D00; /* Cor laranja do Gemini */
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .gemini-button:hover {
-            background-color: #E65100; /* Tom mais escuro para hover */
-            transform: scale(1.05);
         }
         
         .message {
@@ -434,6 +419,93 @@
             margin-bottom: var(--espaco-sm);
         }
         
+        .acknowledge-container {
+            text-align: center;
+            margin-top: var(--espaco-sm);
+        }
+        
+        .acknowledge-btn {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--cor-texto-principal);
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+        
+        .acknowledge-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .acknowledge-btn.acknowledged {
+            color: #4CAF50;
+            opacity: 1;
+            cursor: default;
+        }
+        
+        #news-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 50, 100, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        #news-popup-box {
+            background: var(--cor-container);
+            padding: var(--espaco-lg);
+            border-radius: var(--borda-raio);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            text-align: left;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        #news-popup-box h2 {
+            margin-top: 0;
+            color: var(--cor-azul-escuro);
+            font-size: 20px;
+            text-align: center;
+        }
+        
+        #news-popup-list .news-item {
+            margin-bottom: var(--espaco-lg);
+        }
+        
+        #news-popup-list .news-item .acknowledge-btn {
+            display: block;
+            margin: var(--espaco-sm) auto 0;
+            padding: var(--espaco-sm) var(--espaco-md);
+            background-color: var(--cor-azul-medio);
+            color: white;
+            border: none;
+            border-radius: var(--borda-raio);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        #news-popup-list .news-item .acknowledge-btn:hover {
+            background-color: var(--cor-azul-escuro);
+        }
+        
+        #news-popup-list .news-item .acknowledge-btn.acknowledged {
+            background-color: #4CAF50;
+            cursor: default;
+        }
+        
         .chat-header {
             display: flex;
             flex-direction: column;
@@ -487,6 +559,9 @@
             #news-panel {
                 display: none;
             }
+            #news-popup {
+                z-index: 1002;
+            }
         }
         
         @media (max-width: 768px) {
@@ -519,7 +594,15 @@
                 </div>
                 <button type="submit" id="identificacao-submit" style="padding: 12px 20px; width: 100%; font-size: 16px; font-weight: bold; border: none; background-color: var(--cor-azul-medio); color: white; border-radius: 8px; cursor: pointer; margin-top: 10px;">Entrar</button>
             </form>
-            <p id="identificacao-error" style="display:none; color: #ff4d4d; margin-top: 15px;">Acesso permitido apenas para e-mails @velotax.com.br!</p>
+            <p id="identificacao-error" style="display:none; color: #ff4d4d; margin-top: 15px;">Acesso permitido apenas para e-mails corporativos!</p>
+        </div>
+    </div>
+    
+    <div id="news-popup">
+        <div id="news-popup-box">
+            <h2>Notícias da Semana</h2>
+            <p>Por favor, confirme que está ciente das notícias abaixo:</p>
+            <div id="news-popup-list"></div>
         </div>
     </div>
     
@@ -551,7 +634,6 @@
                     </ul>
                 </div>
             </div>
-
             <br><h4 style="margin-top: 20px;">Clique na prancheta 📋 ao lado da resposta do bot para copiar...</h4><br><br>
             <strong>Vale lembrar que, as informações presentes aqui, são de uso interno...</strong>
         </div>
@@ -570,27 +652,23 @@
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                 </button>
-                <a href="https://chat.google.com/u/0/search/Gabriel.Araujo@velotax.com.br" class="action-button" target="_blank" title="Precisa de ajuda?">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                </a>
                 <button class="gemini-button" onclick="window.open('https://gemini.google.com/app?hl=pt-BR', '_blank')" title="Obter ajuda do Gemini AI">
                     ✦
                 </button>
             </div>
         </div>
         <div id="news-panel" class="panel">
-           <div class="panel-header"><h2>Notícias da Semana</h2></div>
+            <div class="panel-header"><h2>Notícias da Semana</h2></div>
             <div id="news-list">
-                <div class="news-item critical-alert">
+                <div class="news-item critical-alert" data-news-id="news1">
                     <h2>Desligamos a Antecipação novamente, pessoal</h2>
                     <small>Publicado em: 07/07/2025</small>
                     <p>Pessoal, para todos os clientes que entrarem em contato via chamada ou ticket, que questionar/demonstrar interesse na antecipação e/ou crédito trabalhador, por favor, registrem na planilha abaixo, pois realizaremos o envio de notificação para os mesmos. 
 🚨É importante¹ mencionar que estamos realizando os testes finais e em breve serão disponibilizados no aplicativo.
-🚨É importante² ***NÃO*** mencionar nenhum prazo aos clientes. Conforme formos avançando, informaremos à vocês. Link e planilha no grupo B2C Recados e novidades!!                
+🚨É importante² ***NÃO*** mencionar nenhum prazo aos clientes. Conforme formos avançando, informaremos à vocês. Link e planilha no grupo B2C Recados e novidades!!</p>
+                    <div class="acknowledge-container">
+                        <button class="acknowledge-btn" title="Confirmar leitura">✅</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -601,51 +679,173 @@
             const identificacaoOverlay = document.getElementById('identificacao-overlay');
             const identificacaoForm = document.getElementById('identificacao-form');
             const appWrapper = document.querySelector('.app-wrapper');
+            const newsPopup = document.getElementById('news-popup');
+            const newsPopupList = document.getElementById('news-popup-list');
+
+            // Para fins de teste, desative a validação do domínio
+            const BYPASS_VALIDATION = true;
+
+            function getCurrentDate() {
+                return new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            }
+
+            function loadAcknowledgements() {
+                try {
+                    const data = localStorage.getItem('newsAcknowledgements');
+                    return data ? JSON.parse(data) : {};
+                } catch (e) {
+                    console.error('Erro ao carregar newsAcknowledgements:', e);
+                    return {};
+                }
+            }
+
+            function saveAcknowledgements(acknowledgements) {
+                try {
+                    localStorage.setItem('newsAcknowledgements', JSON.stringify(acknowledgements));
+                } catch (e) {
+                    console.error('Erro ao salvar newsAcknowledgements:', e);
+                }
+            }
+
+            function updateNewsItemButton(newsItem, acknowledged) {
+                const btn = newsItem.querySelector('.acknowledge-btn');
+                if (btn) {
+                    btn.classList.toggle('acknowledged', acknowledged);
+                    btn.disabled = acknowledged;
+                }
+            }
+
+            function showNewsPopup(newsItems) {
+                newsPopupList.innerHTML = '';
+                newsItems.forEach(item => {
+                    const newsId = item.dataset.newsId;
+                    const acknowledgements = loadAcknowledgements();
+                    const isAcknowledged = acknowledgements[newsId]?.date === getCurrentDate();
+                    const newsDiv = document.createElement('div');
+                    newsDiv.className = `news-item ${item.classList.contains('critical-alert') ? 'critical-alert' : ''}`;
+                    newsDiv.innerHTML = `
+                        <h2>${item.querySelector('h2').textContent}</h2>
+                        <small>${item.querySelector('small').textContent}</small>
+                        <p>${item.querySelector('p').textContent}</p>
+                        <div class="acknowledge-container">
+                            <button class="acknowledge-btn" data-news-id="${newsId}" ${isAcknowledged ? 'disabled' : ''}>Estou Ciente</button>
+                        </div>
+                    `;
+                    if (isAcknowledged) {
+                        newsDiv.querySelector('.acknowledge-btn').classList.add('acknowledged');
+                    }
+                    newsPopupList.appendChild(newsDiv);
+                });
+
+                newsPopup.style.display = 'flex';
+            }
+
+            function checkAndShowNewsPopup() {
+                const newsItems = document.querySelectorAll('#news-list .news-item');
+                const acknowledgements = loadAcknowledgements();
+                const currentDate = getCurrentDate();
+                let showPopup = false;
+
+                newsItems.forEach(item => {
+                    const newsId = item.dataset.newsId;
+                    const isAcknowledgedToday = acknowledgements[newsId]?.date === currentDate;
+                    updateNewsItemButton(item, isAcknowledgedToday);
+                    if (!isAcknowledgedToday) {
+                        showPopup = true;
+                    }
+                });
+
+                if (showPopup) {
+                    showNewsPopup(newsItems);
+                }
+            }
+
+            newsPopupList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('acknowledge-btn') && !e.target.disabled) {
+                    const newsId = e.target.dataset.newsId;
+                    const acknowledgements = loadAcknowledgements();
+                    acknowledgements[newsId] = { acknowledged: true, date: getCurrentDate() };
+                    saveAcknowledgements(acknowledgements);
+                    e.target.classList.add('acknowledged');
+                    e.target.disabled = true;
+
+                    const newsItem = document.querySelector(`#news-list .news-item[data-news-id="${newsId}"]`);
+                    if (newsItem) {
+                        updateNewsItemButton(newsItem, true);
+                    }
+
+                    const allAcknowledged = Array.from(newsPopupList.querySelectorAll('.acknowledge-btn')).every(btn => btn.disabled);
+                    if (allAcknowledged) {
+                        newsPopup.style.display = 'none';
+                    }
+                }
+            });
 
             function verificarIdentificacao() {
+                console.log('Iniciando verificarIdentificacao');
                 const DOMINIO_PERMITIDO = "@velotax.com.br";
                 const umDiaEmMs = 24 * 60 * 60 * 1000;
                 let dadosSalvos = null;
                 try {
                     const dadosSalvosString = localStorage.getItem('dadosAtendenteChatbot');
-                    if(dadosSalvosString) dadosSalvos = JSON.parse(dadosSalvosString);
-                } catch(e) { 
-                    localStorage.removeItem('dadosAtendenteChatbot'); 
+                    console.log('Dados salvos no localStorage:', dadosSalvosString);
+                    if (dadosSalvosString) {
+                        dadosSalvos = JSON.parse(dadosSalvosString);
+                        console.log('Dados parseados:', dadosSalvos);
+                    }
+                } catch (e) {
+                    console.error('Erro ao parsear localStorage:', e);
+                    localStorage.removeItem('dadosAtendenteChatbot');
                 }
-                
-                if (!dadosSalvos || (Date.now() - dadosSalvos.timestamp > umDiaEmMs) || !dadosSalvos.email.endsWith(DOMINIO_PERMITIDO)) {
-                    identificacaoOverlay.style.display = 'flex';
-                    appWrapper.style.visibility = 'hidden';
-                } else {
+
+                if (dadosSalvos && (Date.now() - dadosSalvos.timestamp <= umDiaEmMs) && (BYPASS_VALIDATION || dadosSalvos.email.endsWith(DOMINIO_PERMITIDO))) {
+                    console.log('Validação bem-sucedida, iniciando bot');
                     identificacaoOverlay.style.display = 'none';
                     appWrapper.style.visibility = 'visible';
                     iniciarBot(dadosSalvos);
+                } else {
+                    console.log('Validação falhou ou dados expirados, exibindo overlay');
+                    identificacaoOverlay.style.display = 'flex';
+                    appWrapper.style.visibility = 'hidden';
                 }
             }
 
             identificacaoForm.addEventListener('submit', function(event) {
                 event.preventDefault();
+                console.log('Formulário submetido');
                 const DOMINIO_PERMITIDO = "@velotax.com.br";
                 const nome = document.getElementById('nome-input').value.trim();
                 const email = document.getElementById('email-input').value.trim().toLowerCase();
                 const errorMsg = document.getElementById('identificacao-error');
+                console.log('Dados inseridos - Nome:', nome, 'Email:', email);
 
-                if (nome && email && email.endsWith(DOMINIO_PERMITIDO)) {
-                    const dadosAtendente = { 
-                        nome, 
-                        email, 
-                        timestamp: Date.now() 
+                if (nome && email && (BYPASS_VALIDATION || email.endsWith(DOMINIO_PERMITIDO))) {
+                    console.log('Validação do formulário bem-sucedida');
+                    const dadosAtendente = {
+                        nome,
+                        email,
+                        timestamp: Date.now()
                     };
-                    localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
-                    identificacaoOverlay.style.display = 'none';
-                    appWrapper.style.visibility = 'visible';
-                    iniciarBot(dadosAtendente);
+                    try {
+                        localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+                        console.log('Dados salvos no localStorage:', dadosAtendente);
+                        identificacaoOverlay.style.display = 'none';
+                        appWrapper.style.visibility = 'visible';
+                        iniciarBot(dadosAtendente);
+                    } catch (e) {
+                        console.error('Erro ao salvar no localStorage:', e);
+                        errorMsg.textContent = 'Erro ao salvar os dados. Tente novamente.';
+                        errorMsg.style.display = 'block';
+                    }
                 } else {
+                    console.log('Validação do formulário falhou - Nome:', nome, 'Email:', email, 'Validação:', email.endsWith(DOMINIO_PERMITIDO));
+                    errorMsg.textContent = 'Acesso permitido apenas para e-mails corporativos!';
                     errorMsg.style.display = 'block';
                 }
             });
 
             function iniciarBot(dadosAtendente) {
+                console.log('iniciarBot chamado com:', dadosAtendente);
                 const chatBox = document.getElementById('chat-box');
                 const userInput = document.getElementById('user-input');
                 const sendButton = document.getElementById('send-button');
@@ -789,7 +989,6 @@
                             })
                         });
                         
-                        // Verifica se a resposta é JSON válido
                         const contentType = response.headers.get('content-type');
                         if (!contentType || !contentType.includes('application/json')) {
                             const text = await response.text();
@@ -817,7 +1016,6 @@
                         const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
                         const response = await fetch(url);
                         
-                        // Verifica se a resposta é JSON válido
                         const contentType = response.headers.get('content-type');
                         if (!contentType || !contentType.includes('application/json')) {
                             const text = await response.text();
@@ -888,6 +1086,17 @@
                     }
                 });
 
+                document.getElementById('news-list').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('acknowledge-btn') && !e.target.disabled) {
+                        const newsId = e.target.closest('.news-item').dataset.newsId;
+                        const acknowledgements = loadAcknowledgements();
+                        acknowledgements[newsId] = { acknowledged: true, date: getCurrentDate() };
+                        saveAcknowledgements(acknowledgements);
+                        updateNewsItemButton(e.target.closest('.news-item'), true);
+                        checkAndShowNewsPopup();
+                    }
+                });
+
                 themeSwitcher.addEventListener('click', () => {
                     body.classList.toggle('dark-theme');
                     const isDark = body.classList.contains('dark-theme');
@@ -913,6 +1122,7 @@
                 addMessage(`${saudacao}, ${primeiroNome}! Sou o assistente de atendimento. Como posso ajudar?`, 'bot');
                 
                 setInitialTheme();
+                checkAndShowNewsPopup();
             }
 
             verificarIdentificacao();
