@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Interno com ChatBot</title>
+    <title>Painel Interno com ChatBot Aprimorado</title>
     <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
     <style>
         :root {
+            /* Cores base */
             --cor-fundo: #f0f4f8;
             --cor-container: #ffffff;
             --cor-caixa-chat: #eaf2ff;
@@ -19,12 +20,29 @@
             --cor-sombra: rgba(0, 0, 0, 0.1);
             --cor-texto-link: #1a73e8;
             --cor-foco: #4d90fe;
+            --cor-sucesso: #4CAF50;
+            --cor-erro: #f44336;
+            --cor-alerta: #FF9800;
+            --cor-info: #2196F3;
+            
+            /* Espaçamentos */
             --espaco-xs: 4px;
             --espaco-sm: 8px;
             --espaco-md: 16px;
             --espaco-lg: 24px;
             --espaco-xl: 32px;
-            --borda-raio: 8px;
+            
+            /* Bordas */
+            --borda-raio: 12px;
+            --borda-raio-sm: 6px;
+            
+            /* Avatar */
+            --avatar-size: 36px;
+            
+            /* Transições */
+            --transicao-rapida: 0.2s ease;
+            --transicao-normal: 0.3s ease;
+            --transicao-lenta: 0.5s ease;
         }
         
         body.dark-theme {
@@ -40,10 +58,14 @@
             --cor-sombra: rgba(255, 255, 255, 0.05);
             --cor-texto-link: #8ab4f8;
             --cor-foco: #5e97f6;
+            --cor-sucesso: #2e7d32;
+            --cor-erro: #c62828;
+            --cor-alerta: #FFA000;
+            --cor-info: #1976D2;
         }
         
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
             background: var(--cor-fundo);
             color: var(--cor-texto-principal);
             display: flex;
@@ -53,7 +75,7 @@
             margin: 0;
             padding: var(--espaco-md);
             box-sizing: border-box;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color var(--transicao-normal), color var(--transicao-normal);
         }
         
         .app-wrapper {
@@ -63,18 +85,19 @@
             max-width: 1400px;
             height: 95vh;
             gap: var(--espaco-md);
+            transition: var(--transicao-normal);
         }
         
         .panel {
             background: var(--cor-container);
             border-radius: var(--borda-raio);
             box-shadow: 0 4px 20px var(--cor-sombra);
-            padding: var(--espaco-lg);
+            padding: 0;
             display: flex;
             flex-direction: column;
             border: 1px solid var(--cor-borda);
-            overflow-y: auto;
-            transition: all 0.3s ease;
+            overflow: hidden;
+            transition: all var(--transicao-normal);
         }
         
         .panel:hover {
@@ -86,29 +109,78 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid var(--cor-azul-claro);
-            margin-bottom: var(--espaco-md);
-            padding-bottom: var(--espaco-sm);
+            padding: var(--espaco-md) var(--espaco-lg);
+            background: linear-gradient(135deg, var(--cor-azul-medio) 0%, var(--cor-azul-escuro) 100%);
+            color: white;
+            position: relative;
         }
         
         .panel h2 {
             margin: 0;
             font-size: 18px;
-            color: var(--cor-azul-escuro);
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
         
         #theme-switcher {
-            font-size: 24px;
+            font-size: 20px;
             cursor: pointer;
             background: transparent;
             border: none;
             padding: var(--espaco-xs);
-            color: var(--cor-texto-principal);
-            transition: transform 0.2s;
+            color: white;
+            transition: transform var(--transicao-rapida);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
         }
         
         #theme-switcher:hover {
             transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Sidebar styles */
+        .sidebar-content {
+            padding: var(--espaco-md);
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: var(--espaco-md);
+        }
+        
+        #question-search {
+            width: 100%;
+            padding: var(--espaco-sm) var(--espaco-md);
+            padding-left: 36px;
+            border-radius: var(--borda-raio);
+            border: 1px solid var(--cor-borda);
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            font-size: 14px;
+            transition: var(--transicao-normal);
+        }
+        
+        #question-search:focus {
+            border-color: var(--cor-azul-medio);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--cor-azul-medio);
         }
         
         #quick-questions-list, #more-questions-list {
@@ -118,30 +190,42 @@
         }
         
         #quick-questions-list li, #more-questions-list li {
-            padding: var(--espaco-md) var(--espaco-sm);
+            padding: var(--espaco-md);
             border-radius: var(--borda-raio);
             margin-bottom: var(--espaco-sm);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--transicao-rapida);
             font-size: 14px;
             border: 1px solid var(--cor-borda);
-            min-height: 44px;
             display: flex;
             align-items: center;
+            gap: var(--espaco-sm);
         }
         
         #quick-questions-list li:hover, #more-questions-list li:hover {
             background-color: var(--cor-azul-medio);
             color: white;
             transform: translateX(2px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
+        .question-category {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--cor-azul-medio);
+            margin: var(--espaco-md) 0 var(--espaco-sm) 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Chat container styles */
         .chat-container {
             height: 100%;
             padding: 0;
             display: flex;
             flex-direction: column;
             box-sizing: border-box;
+            position: relative;
         }
         
         .chat-box {
@@ -149,9 +233,10 @@
             overflow-y: auto;
             padding: var(--espaco-md);
             background-color: var(--cor-caixa-chat);
-            border-radius: var(--borda-raio);
             scrollbar-width: thin;
             scrollbar-color: var(--cor-azul-medio) var(--cor-caixa-chat);
+            display: flex;
+            flex-direction: column;
         }
         
         .chat-box::-webkit-scrollbar {
@@ -171,20 +256,23 @@
             display: flex;
             align-items: center;
             gap: var(--espaco-sm);
-            margin-top: var(--espaco-md);
-            padding: 0 var(--espaco-lg);
+            padding: var(--espaco-md);
+            background-color: var(--cor-container);
+            border-top: 1px solid var(--cor-borda);
+            position: relative;
         }
         
         #user-input {
             flex-grow: 1;
-            padding: var(--espaco-md);
+            padding: var(--espaco-md) var(--espaco-lg);
             border-radius: 24px;
             border: 1px solid var(--cor-borda);
-            background-color: var(--cor-container);
+            background-color: var(--cor-fundo);
             color: var(--cor-texto-principal);
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
-            transition: all 0.3s;
+            transition: var(--transicao-normal);
+            padding-right: 48px;
         }
         
         #user-input:focus {
@@ -192,7 +280,7 @@
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
         }
         
-        .action-button, .gemini-button {
+        .action-button {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -203,84 +291,162 @@
             color: white;
             border: none;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--transicao-rapida);
             flex-shrink: 0;
             text-decoration: none;
         }
         
-        .gemini-button {
-            background-color: #FF6D00;
-        }
-        
-        .action-button:hover, .gemini-button:hover {
+        .action-button:hover {
             background-color: var(--cor-azul-escuro);
             transform: scale(1.05);
         }
         
-        .gemini-button:hover {
-            background-color: #E65100;
-        }
-        
-        .action-button svg, .gemini-button svg {
+        .action-button svg {
             width: 20px;
             height: 20px;
         }
         
+        .gemini-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: #FF6D00;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all var(--transicao-rapida);
+            flex-shrink: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .gemini-button:hover {
+            background-color: #E65100;
+            transform: scale(1.05);
+        }
+        
+        /* Message styles */
+        .message-container {
+            display: flex;
+            margin-bottom: var(--espaco-md);
+            max-width: 85%;
+            position: relative;
+            opacity: 0;
+            animation: fadeIn var(--transicao-normal) forwards;
+        }
+        
+        .message-container.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        
+        .message-container.bot {
+            align-self: flex-start;
+        }
+        
+        .avatar {
+            width: var(--avatar-size);
+            height: var(--avatar-size);
+            border-radius: 50%;
+            background-size: cover;
+            flex-shrink: 0;
+            margin-top: var(--espaco-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background-color: var(--cor-azul-medio);
+            color: white;
+            transition: var(--transicao-rapida);
+        }
+        
+        .avatar.user {
+            background-color: var(--cor-azul-medio);
+            margin-left: var(--espaco-sm);
+        }
+        
+        .avatar.bot {
+            background-color: var(--cor-balao-bot);
+            color: var(--cor-texto-principal);
+            margin-right: var(--espaco-sm);
+        }
+        
+        .message-content {
+            display: flex;
+            flex-direction: column;
+            max-width: calc(100% - var(--avatar-size) - var(--espaco-md));
+        }
+        
         .message {
             position: relative;
-            margin-bottom: var(--espaco-md);
-            padding: var(--espaco-sm) var(--espaco-md);
+            padding: var(--espaco-md);
             border-radius: 18px;
-            max-width: 85%;
             word-wrap: break-word;
             box-shadow: 0 1px 3px var(--cor-sombra);
             line-height: 1.5;
-            animation: fadeIn 0.3s ease-out;
-            transition: all 0.2s ease-in-out;
+            transition: all var(--transicao-rapida);
         }
         
-        .user-msg {
-            background: linear-gradient(90deg, #0052CC 0%, #0066FF 100%);
+        .user .message {
+            background: linear-gradient(135deg, var(--cor-azul-medio) 0%, var(--cor-azul-escuro) 100%);
             color: #FFFFFF;
-            margin-left: auto;
             border-bottom-right-radius: 4px;
         }
         
-        .bot-msg {
+        .bot .message {
             background: var(--cor-balao-bot);
             color: var(--cor-texto-principal);
-            margin-right: auto;
             border-bottom-left-radius: 4px;
         }
         
-        .bot-msg img {
+        .bot .message img {
             max-width: 100%;
             border-radius: 10px;
             margin-top: var(--espaco-sm);
             display: block;
+            box-shadow: 0 2px 8px var(--cor-sombra);
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            margin-top: var(--espaco-xs);
+            align-self: flex-end;
+            transition: var(--transicao-rapida);
         }
         
         .copy-btn {
             position: absolute;
-            top: 5px;
-            right: -35px;
+            top: 8px;
+            right: -32px;
             background: transparent;
             border: none;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             color: var(--cor-texto-principal);
-            opacity: 0.3;
-            transition: all 0.2s ease;
+            opacity: 0.5;
+            transition: all var(--transicao-rapida);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
         }
         
         .copy-btn:hover {
             opacity: 1;
+            background: rgba(0, 0, 0, 0.05);
             transform: scale(1.1);
         }
         
         .copy-btn.copied {
             animation: feedbackCopied 0.5s ease;
-            color: #4CAF50;
+            color: var(--cor-sucesso);
+            opacity: 1;
         }
         
         .feedback-container {
@@ -289,20 +455,28 @@
             align-items: center;
             gap: var(--espaco-xs);
             margin-top: var(--espaco-sm);
+            position: relative;
         }
         
         .feedback-btn {
             background: transparent;
             border: none;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
             opacity: 0.6;
-            transition: all 0.2s;
+            transition: all var(--transicao-rapida);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
         }
         
         .feedback-btn:hover {
             opacity: 1;
             transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.05);
         }
         
         .feedback-btn.active {
@@ -310,13 +484,44 @@
         }
         
         .feedback-btn.positive.active {
-            color: #4CAF50;
+            color: var(--cor-sucesso);
         }
         
         .feedback-btn.negative.active {
-            color: #f44336;
+            color: var(--cor-erro);
         }
         
+        .feedback-confetti {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--cor-azul-medio);
+            opacity: 0;
+            border-radius: 50%;
+        }
+        
+        .file-preview {
+            display: flex;
+            align-items: center;
+            padding: var(--espaco-sm);
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: var(--borda-raio-sm);
+            margin-top: var(--espaco-sm);
+            font-size: 12px;
+        }
+        
+        .file-preview-icon {
+            margin-right: var(--espaco-sm);
+            font-size: 16px;
+        }
+        
+        .file-preview-remove {
+            margin-left: auto;
+            cursor: pointer;
+            color: var(--cor-erro);
+        }
+        
+        /* Login overlay */
         #identificacao-overlay {
             position: fixed;
             top: 0;
@@ -329,36 +534,42 @@
             align-items: center;
             z-index: 1000;
             backdrop-filter: blur(5px);
-            animation: fadeIn 0.5s ease-out;
+            animation: fadeIn var(--transicao-normal);
         }
         
         #identificacao-box {
             background: var(--cor-container);
-            padding: var(--espaco-lg) var(--espaco-xl);
+            padding: var(--espaco-xl);
             border-radius: var(--borda-raio);
             box-shadow: 0 5px 25px rgba(0,0,0,0.3);
             text-align: center;
             width: 90%;
             max-width: 450px;
-            animation: slideUp 0.5s ease-out;
+            animation: slideUp var(--transicao-normal);
         }
         
+        /* Expandable sections */
         .expandable-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            padding: var(--espaco-sm);
+            padding: var(--espaco-sm) var(--espaco-md);
             margin-top: var(--espaco-md);
             border: 1px solid var(--cor-borda);
             border-radius: var(--borda-raio);
             background-color: var(--cor-fundo);
             font-weight: bold;
             color: var(--cor-azul-escuro);
+            transition: var(--transicao-rapida);
+        }
+        
+        .expandable-header:hover {
+            background-color: rgba(0, 0, 0, 0.03);
         }
         
         .expandable-header .arrow {
-            transition: transform 0.3s ease;
+            transition: transform var(--transicao-rapida);
         }
         
         .expandable-header.expanded .arrow {
@@ -372,6 +583,7 @@
             border-left: 2px solid var(--cor-azul-claro);
         }
         
+        /* Typing indicator */
         .typing-indicator {
             display: flex;
             padding: var(--espaco-sm) var(--espaco-md);
@@ -379,6 +591,9 @@
             background: var(--cor-balao-bot);
             border-radius: 18px;
             width: fit-content;
+            align-self: flex-start;
+            opacity: 0;
+            animation: fadeIn var(--transicao-rapida) forwards;
         }
         
         .typing-dot {
@@ -395,145 +610,127 @@
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         
+        /* News panel */
         .news-item {
             padding: var(--espaco-md);
             margin-bottom: var(--espaco-md);
             background: var(--cor-caixa-chat);
             border-radius: var(--borda-raio);
             border-left: 4px solid var(--cor-azul-medio);
+            transition: var(--transicao-rapida);
+        }
+        
+        .news-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--cor-sombra);
         }
         
         .critical-alert {
-            border-left-color: #ff4d4d;
+            border-left-color: var(--cor-erro);
             background: rgba(255, 77, 77, 0.1);
+        }
+        
+        .warning-alert {
+            border-left-color: var(--cor-alerta);
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .info-alert {
+            border-left-color: var(--cor-info);
+            background: rgba(33, 150, 243, 0.1);
         }
         
         .news-item h2 {
             margin-top: 0;
             color: var(--cor-azul-escuro);
+            font-size: 16px;
         }
         
         .news-item small {
             color: var(--cor-azul-medio);
             display: block;
             margin-bottom: var(--espaco-sm);
+            font-size: 12px;
         }
         
-        .acknowledge-container {
-            text-align: center;
-            margin-top: var(--espaco-sm);
-        }
-        
-        .acknowledge-btn {
-            background: transparent;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            color: var(--cor-texto-principal);
-            opacity: 0.6;
-            transition: all 0.2s;
-        }
-        
-        .acknowledge-btn:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-        
-        .acknowledge-btn.acknowledged {
-            color: #4CAF50;
-            opacity: 1;
-            cursor: default;
-        }
-        
-        #news-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 50, 100, 0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            backdrop-filter: blur(5px);
-            animation: fadeIn 0.5s ease-out;
-        }
-        
-        #news-popup-box {
-            background: var(--cor-container);
-            padding: var(--espaco-lg);
-            border-radius: var(--borda-raio);
-            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            text-align: left;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp 0.5s ease-out;
-        }
-        
-        #news-popup-box h2 {
-            margin-top: 0;
-            color: var(--cor-azul-escuro);
-            font-size: 20px;
-            text-align: center;
-        }
-        
-        #news-popup-list .news-item {
-            margin-bottom: var(--espaco-lg);
-        }
-        
-        #news-popup-list .news-item .acknowledge-btn {
-            display: block;
-            margin: var(--espaco-sm) auto 0;
-            padding: var(--espaco-sm) var(--espaco-md);
-            background-color: var(--cor-azul-medio);
-            color: white;
-            border: none;
-            border-radius: var(--borda-raio);
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        #news-popup-list .news-item .acknowledge-btn:hover {
-            background-color: var(--cor-azul-escuro);
-        }
-        
-        #news-popup-list .news-item .acknowledge-btn.acknowledged {
-            background-color: #4CAF50;
-            cursor: default;
-        }
-        
+        /* Chat header */
         .chat-header {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: var(--espaco-md);
             text-align: center;
+            padding: var(--espaco-lg);
+            background: linear-gradient(135deg, var(--cor-azul-medio) 0%, var(--cor-azul-escuro) 100%);
+            color: white;
+            position: relative;
         }
         
         .chat-logo {
             width: 80px;
             height: 80px;
             margin-bottom: var(--espaco-sm);
+            border-radius: 50%;
+            object-fit: contain;
+            background: white;
+            padding: var(--espaco-xs);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
         .chat-title {
             margin: 0;
-            color: var(--cor-azul-escuro);
-            font-size: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
         
+        .chat-subtitle {
+            margin: var(--espaco-xs) 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+            max-width: 80%;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            margin-right: var(--espaco-xs);
+            animation: pulse 2s infinite;
+        }
+        
+        /* History panel */
+        .history-item {
+            padding: var(--espaco-sm) var(--espaco-md);
+            border-radius: var(--borda-raio-sm);
+            margin-bottom: var(--espaco-xs);
+            cursor: pointer;
+            transition: var(--transicao-rapida);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: var(--espaco-sm);
+        }
+        
+        .history-item:hover {
+            background-color: var(--cor-balao-bot);
+        }
+        
+        .history-item-icon {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+        
+        /* Animations */
         @keyframes typingAnimation {
             0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
             30% { transform: translateY(-5px); opacity: 1; }
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         @keyframes slideUp {
@@ -547,20 +744,30 @@
             100% { transform: scale(1); }
         }
         
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        /* Focus styles */
         :focus {
             outline: 2px solid var(--cor-foco);
             outline-offset: 2px;
         }
         
+        /* Responsive styles */
         @media (max-width: 1200px) {
             .app-wrapper {
                 grid-template-columns: 250px 1fr;
             }
             #news-panel {
                 display: none;
-            }
-            #news-popup {
-                z-index: 1002;
             }
         }
         
@@ -573,7 +780,43 @@
                 display: none;
             }
             .panel {
-                padding: var(--espaco-md);
+                padding: 0;
+            }
+            
+            .message-container {
+                max-width: 90%;
+            }
+            
+            .avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+            
+            .message {
+                padding: var(--espaco-sm) var(--espaco-md);
+                font-size: 14px;
+            }
+            
+            .input-area {
+                padding: var(--espaco-sm);
+            }
+            
+            #user-input {
+                padding: var(--espaco-sm) var(--espaco-md);
+                font-size: 14px;
+            }
+            
+            .action-button, .gemini-button {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .emoji-picker {
+                width: 250px;
+                height: 250px;
+                right: 10px;
+                bottom: 60px;
             }
         }
     </style>
@@ -594,58 +837,71 @@
                 </div>
                 <button type="submit" id="identificacao-submit" style="padding: 12px 20px; width: 100%; font-size: 16px; font-weight: bold; border: none; background-color: var(--cor-azul-medio); color: white; border-radius: 8px; cursor: pointer; margin-top: 10px;">Entrar</button>
             </form>
-            <p id="identificacao-error" style="display:none; color: #ff4d4d; margin-top: 15px;">Acesso permitido apenas para e-mails corporativos!</p>
-        </div>
-    </div>
-    
-    <div id="news-popup">
-        <div id="news-popup-box">
-            <h2>Notícias da Semana</h2>
-            <p>Por favor, confirme que está ciente das notícias abaixo:</p>
-            <div id="news-popup-list"></div>
+            <p id="identificacao-error" style="display:none; color: var(--cor-erro); margin-top: 15px;">Acesso permitido apenas para e-mails @velotax.com.br!</p>
         </div>
     </div>
     
     <div class="app-wrapper">
         <div id="sidebar" class="panel">
-            <div class="panel-header"><h2>Perguntas Frequentes</h2></div>
-            <ul id="quick-questions-list">
-                <li>E-MAIL DA PROCURAÇÃO, OQUE RESPONDER?</li>
-                <li>Quero fazer a exclusão da minha conta</li>
-                <li>Problema no login do app</li>
-                <li>Informação sobre os valores da restituição</li>
-            </ul>
-
-            <div id="expandable-faq-container">
-                <div id="expandable-faq-header" class="expandable-header">
-                    <span>Ver mais</span>
-                    <span class="arrow">▶</span>
+            <div class="panel-header">
+                <h2>Perguntas Frequentes</h2>
+            </div>
+            <div class="sidebar-content">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="question-search" placeholder="Buscar perguntas...">
                 </div>
-                <div id="more-questions" class="hidden-questions">
-                    <ul id="more-questions-list">
-                        <li>🔐retenção da chave pix</li>
-                        <li>💰juros</li>
-                        <li>📲portabilidade.</li>
-                        <li>✂desconto proporcional</li>
-                        <li>Qual o prazo para a restituição?</li>
-                        <li>Como declarar investimentos?</li>
-                        <li>O que fazer se caí na malha fina?</li>
-                        <li>como fazer estorno?</li>
-                    </ul>
+                
+                <div class="question-category">Mais Comuns</div>
+                <ul id="quick-questions-list">
+                    <li data-question="E-mail de procuração, o que dizer?">E-mail de procuração, o que dizer?</li>
+                    <li data-question="Quero fazer a exclusão da minha conta">Quero fazer a exclusão da minha conta</li>
+                    <li data-question="Problema no login do app">Problema no login do app</li>
+                    <li data-question="Informação sobre os valores da restituição">Informação sobre os valores da restituição</li>
+                </ul>
+
+                <div id="expandable-faq-container">
+                    <div id="expandable-faq-header" class="expandable-header">
+                        <span>Outras Perguntas</span>
+                        <span class="arrow">▶</span>
+                    </div>
+                    <div id="more-questions" class="hidden-questions">
+                        <div class="question-category">Financeiro</div>
+                        <ul id="more-questions-list">
+                            <li data-question="Retenção da chave pix">Retenção da chave pix</li>
+                            <li data-question="Juros">Juros</li>
+                            <li data-question="Desconto proporcional">Desconto proporcional</li>
+                            <li data-question="Qual o prazo para a restituição?">Qual o prazo para a restituição?</li>
+                            <li data-question="Como fazer estorno?">Como fazer estorno?</li>
+                        </ul>
+                        
+                        <div class="question-category">Técnico</div>
+                        <ul id="more-questions-list">
+                            <li data-question="Portabilidade">Portabilidade</li>
+                            <li data-question="O que fazer se caí na malha fina?">O que fazer se caí na malha fina?</li>
+                            <li data-question="Como declarar investimentos?">Como declarar investimentos?</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="margin-top: auto; padding-top: var(--espaco-md); border-top: 1px solid var(--cor-borda);">
+                    <h2><p style="font-size: 13px; color: var(--cor-azul-medio);">📋 Clique na prancheta ao lado da resposta para copiar</p></h2>
+                    <p style="font-size: 12px; margin-top: var(--espaco-sm);"><strong>Observação: As informações aqui são de uso interno.</strong> </p>
                 </div>
             </div>
-            <br><h4 style="margin-top: 20px;">Clique na prancheta 📋 ao lado da resposta do bot para copiar e clique no botão laranja ao lado da caixa de mensagem para ir formular para o cliente!!...</h4><br><br>
-            <strong>Vale lembrar que, as informações presentes aqui, são de uso interno...</strong>
         </div>
 
         <div class="chat-container panel">
-            <div class="panel-header">
-                <h2 style="text-align: center; flex-grow: 1;">Assistente Virtual</h2>
+            <div class="chat-header">
+                <img src="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true" alt="Logo" class="chat-logo">
+                <h2 class="chat-title">Assistente Virtual <span class="status-indicator"></span></h2>
+                <p class="chat-subtitle">Como posso te ajudar hoje?</p>
                 <button id="theme-switcher" title="Alterar tema">☀️</button>
             </div>
             <div class="chat-box" id="chat-box"></div>
             <div class="input-area">
-                <input type="text" id="user-input" placeholder="Digite sua pergunta aqui...">
+                <input type="file" id="file-input" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." autocomplete="off">
                 <button id="send-button" class="action-button" title="Enviar mensagem">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -656,19 +912,35 @@
                     ✦
                 </button>
             </div>
+            <div id="file-preview-container" style="display: none; padding: 0 var(--espaco-md) var(--espaco-md);">
+                <div class="file-preview">
+                    <span class="file-preview-icon">📄</span>
+                    <span id="file-preview-name">arquivo.pdf</span>
+                    <span class="file-preview-remove" id="file-preview-remove">✕</span>
+                </div>
+            </div>
         </div>
         <div id="news-panel" class="panel">
-            <div class="panel-header"><h2>Notícias da Semana</h2></div>
-            <div id="news-list">
-                <div class="news-item critical-alert" data-news-id="news1">
+            <div class="panel-header">
+                <h2>Notícias e Alertas</h2>
+            </div>
+            <div id="news-list" style="padding: var(--espaco-md);">
+                <div class="news-item critical-alert">
                     <h2>Desligamos a Antecipação novamente, pessoal</h2>
                     <small>Publicado em: 07/07/2025</small>
                     <p>Pessoal, para todos os clientes que entrarem em contato via chamada ou ticket, que questionar/demonstrar interesse na antecipação e/ou crédito trabalhador, por favor, registrem na planilha abaixo, pois realizaremos o envio de notificação para os mesmos. 
 🚨É importante¹ mencionar que estamos realizando os testes finais e em breve serão disponibilizados no aplicativo.
 🚨É importante² ***NÃO*** mencionar nenhum prazo aos clientes. Conforme formos avançando, informaremos à vocês. Link e planilha no grupo B2C Recados e novidades!!</p>
-                    <div class="acknowledge-container">
-                        <button class="acknowledge-btn" title="Confirmar leitura">✅</button>
-                    </div>
+                </div>
+                <div class="news-item warning-alert">
+                    <h2>Atualização do Sistema</h2>
+                    <small>Publicado em: 05/07/2025</small>
+                    <p>Na próxima sexta-feira, dia 10/07, realizaremos uma atualização no sistema entre 00:00 e 02:00. Durante este período, o sistema ficará indisponível. Por favor, informem os clientes com antecedência.</p>
+                </div>
+                <div class="news-item info-alert">
+                    <h2>Novo Processo de Validação</h2>
+                    <small>Publicado em: 03/07/2025</small>
+                    <p>Implementamos um novo processo de validação de documentos. Consulte o manual atualizado no drive compartilhado para conhecer as novas diretrizes.</p>
                 </div>
             </div>
         </div>
@@ -679,185 +951,146 @@
             const identificacaoOverlay = document.getElementById('identificacao-overlay');
             const identificacaoForm = document.getElementById('identificacao-form');
             const appWrapper = document.querySelector('.app-wrapper');
-            const newsPopup = document.getElementById('news-popup');
-            const newsPopupList = document.getElementById('news-popup-list');
-
-            // Para fins de teste, desative a validação do domínio
-            const BYPASS_VALIDATION = true;
-
-            function getCurrentDate() {
-                return new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-            }
-
-            function loadAcknowledgements() {
-                try {
-                    const data = localStorage.getItem('newsAcknowledgements');
-                    return data ? JSON.parse(data) : {};
-                } catch (e) {
-                    console.error('Erro ao carregar newsAcknowledgements:', e);
-                    return {};
-                }
-            }
-
-            function saveAcknowledgements(acknowledgements) {
-                try {
-                    localStorage.setItem('newsAcknowledgements', JSON.stringify(acknowledgements));
-                } catch (e) {
-                    console.error('Erro ao salvar newsAcknowledgements:', e);
-                }
-            }
-
-            function updateNewsItemButton(newsItem, acknowledged) {
-                const btn = newsItem.querySelector('.acknowledge-btn');
-                if (btn) {
-                    btn.classList.toggle('acknowledged', acknowledged);
-                    btn.disabled = acknowledged;
-                }
-            }
-
-            function showNewsPopup(newsItems) {
-                newsPopupList.innerHTML = '';
-                newsItems.forEach(item => {
-                    const newsId = item.dataset.newsId;
-                    const acknowledgements = loadAcknowledgements();
-                    const isAcknowledged = acknowledgements[newsId]?.date === getCurrentDate();
-                    const newsDiv = document.createElement('div');
-                    newsDiv.className = `news-item ${item.classList.contains('critical-alert') ? 'critical-alert' : ''}`;
-                    newsDiv.innerHTML = `
-                        <h2>${item.querySelector('h2').textContent}</h2>
-                        <small>${item.querySelector('small').textContent}</small>
-                        <p>${item.querySelector('p').textContent}</p>
-                        <div class="acknowledge-container">
-                            <button class="acknowledge-btn" data-news-id="${newsId}" ${isAcknowledged ? 'disabled' : ''}>Estou Ciente</button>
-                        </div>
-                    `;
-                    if (isAcknowledged) {
-                        newsDiv.querySelector('.acknowledge-btn').classList.add('acknowledged');
-                    }
-                    newsPopupList.appendChild(newsDiv);
-                });
-
-                newsPopup.style.display = 'flex';
-            }
-
-            function checkAndShowNewsPopup() {
-                const newsItems = document.querySelectorAll('#news-list .news-item');
-                const acknowledgements = loadAcknowledgements();
-                const currentDate = getCurrentDate();
-                let showPopup = false;
-
-                newsItems.forEach(item => {
-                    const newsId = item.dataset.newsId;
-                    const isAcknowledgedToday = acknowledgements[newsId]?.date === currentDate;
-                    updateNewsItemButton(item, isAcknowledgedToday);
-                    if (!isAcknowledgedToday) {
-                        showPopup = true;
-                    }
-                });
-
-                if (showPopup) {
-                    showNewsPopup(newsItems);
-                }
-            }
-
-            newsPopupList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('acknowledge-btn') && !e.target.disabled) {
-                    const newsId = e.target.dataset.newsId;
-                    const acknowledgements = loadAcknowledgements();
-                    acknowledgements[newsId] = { acknowledged: true, date: getCurrentDate() };
-                    saveAcknowledgements(acknowledgements);
-                    e.target.classList.add('acknowledged');
-                    e.target.disabled = true;
-
-                    const newsItem = document.querySelector(`#news-list .news-item[data-news-id="${newsId}"]`);
-                    if (newsItem) {
-                        updateNewsItemButton(newsItem, true);
-                    }
-
-                    const allAcknowledged = Array.from(newsPopupList.querySelectorAll('.acknowledge-btn')).every(btn => btn.disabled);
-                    if (allAcknowledged) {
-                        newsPopup.style.display = 'none';
-                    }
-                }
-            });
+            const emojis = ['😀', '😂', '😊', '😍', '👍', '👎', '❤️', '🔥', '🎉', '🤔', '😎', '🙏'];
 
             function verificarIdentificacao() {
-                console.log('Iniciando verificarIdentificacao');
                 const DOMINIO_PERMITIDO = "@velotax.com.br";
                 const umDiaEmMs = 24 * 60 * 60 * 1000;
                 let dadosSalvos = null;
                 try {
                     const dadosSalvosString = localStorage.getItem('dadosAtendenteChatbot');
-                    console.log('Dados salvos no localStorage:', dadosSalvosString);
-                    if (dadosSalvosString) {
-                        dadosSalvos = JSON.parse(dadosSalvosString);
-                        console.log('Dados parseados:', dadosSalvos);
-                    }
-                } catch (e) {
-                    console.error('Erro ao parsear localStorage:', e);
-                    localStorage.removeItem('dadosAtendenteChatbot');
+                    if(dadosSalvosString) dadosSalvos = JSON.parse(dadosSalvosString);
+                } catch(e) { 
+                    localStorage.removeItem('dadosAtendenteChatbot'); 
                 }
-
-                if (dadosSalvos && (Date.now() - dadosSalvos.timestamp <= umDiaEmMs) && (BYPASS_VALIDATION || dadosSalvos.email.endsWith(DOMINIO_PERMITIDO))) {
-                    console.log('Validação bem-sucedida, iniciando bot');
+                
+                if (!dadosSalvos || (Date.now() - dadosSalvos.timestamp > umDiaEmMs) || !dadosSalvos.email.endsWith(DOMINIO_PERMITIDO)) {
+                    identificacaoOverlay.style.display = 'flex';
+                    appWrapper.style.visibility = 'hidden';
+                } else {
                     identificacaoOverlay.style.display = 'none';
                     appWrapper.style.visibility = 'visible';
                     iniciarBot(dadosSalvos);
-                } else {
-                    console.log('Validação falhou ou dados expirados, exibindo overlay');
-                    identificacaoOverlay.style.display = 'flex';
-                    appWrapper.style.visibility = 'hidden';
                 }
             }
 
             identificacaoForm.addEventListener('submit', function(event) {
                 event.preventDefault();
-                console.log('Formulário submetido');
                 const DOMINIO_PERMITIDO = "@velotax.com.br";
                 const nome = document.getElementById('nome-input').value.trim();
                 const email = document.getElementById('email-input').value.trim().toLowerCase();
                 const errorMsg = document.getElementById('identificacao-error');
-                console.log('Dados inseridos - Nome:', nome, 'Email:', email);
 
-                if (nome && email && (BYPASS_VALIDATION || email.endsWith(DOMINIO_PERMITIDO))) {
-                    console.log('Validação do formulário bem-sucedida');
-                    const dadosAtendente = {
-                        nome,
-                        email,
-                        timestamp: Date.now()
+                if (nome && email && email.endsWith(DOMINIO_PERMITIDO)) {
+                    const dadosAtendente = { 
+                        nome, 
+                        email, 
+                        timestamp: Date.now() 
                     };
-                    try {
-                        localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
-                        console.log('Dados salvos no localStorage:', dadosAtendente);
-                        identificacaoOverlay.style.display = 'none';
-                        appWrapper.style.visibility = 'visible';
-                        iniciarBot(dadosAtendente);
-                    } catch (e) {
-                        console.error('Erro ao salvar no localStorage:', e);
-                        errorMsg.textContent = 'Erro ao salvar os dados. Tente novamente.';
-                        errorMsg.style.display = 'block';
-                    }
+                    localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+                    identificacaoOverlay.style.display = 'none';
+                    appWrapper.style.visibility = 'visible';
+                    iniciarBot(dadosAtendente);
                 } else {
-                    console.log('Validação do formulário falhou - Nome:', nome, 'Email:', email, 'Validação:', email.endsWith(DOMINIO_PERMITIDO));
-                    errorMsg.textContent = 'Acesso permitido apenas para e-mails corporativos!';
                     errorMsg.style.display = 'block';
                 }
             });
 
             function iniciarBot(dadosAtendente) {
-                console.log('iniciarBot chamado com:', dadosAtendente);
                 const chatBox = document.getElementById('chat-box');
                 const userInput = document.getElementById('user-input');
                 const sendButton = document.getElementById('send-button');
                 const themeSwitcher = document.getElementById('theme-switcher');
                 const body = document.body;
+                const fileInput = document.getElementById('file-input');
+                const filePreviewContainer = document.getElementById('file-preview-container');
+                const filePreviewName = document.getElementById('file-preview-name');
+                const filePreviewRemove = document.getElementById('file-preview-remove');
+                const questionSearch = document.getElementById('question-search');
+                
                 let ultimaPergunta = '';
                 let ultimaResposta = '';
                 let ultimaLinhaDaFonte = null;
                 let isTyping = false;
+                let selectedFile = null;
 
                 // URL do seu backend Google Apps Script
                 const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzo0z6SUHZMzwtP3TSeUzNHVzTNyeJgqWY3c5qzoRJbzSj_omx7GuIKIzZ4cTsVWyYuwA/exec";
+                function processImageFile(file) {
+                    if (!/^image\/(png|jpg|jpeg)$/.test(file.type)) {
+                        addMessage("Apenas imagens (PNG, JPG, JPEG) são suportadas para leitura automática.", 'bot');
+                        return;
+                    }
+                    
+                    // Mostra preview ao usuário
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        addMessage('<b>Imagem enviada:</b><br><img src="' + e.target.result + '" style="max-width:120px;max-height:120px;">', 'user', {file});
+                    };
+                    reader.readAsDataURL(file);
+
+                    // Envia para OCR no backend
+                    const ocrReader = new FileReader();
+                    ocrReader.onload = function(e) {
+                        showTypingIndicator();
+                        fetch(BACKEND_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                action: 'processImage',
+                                image: e.target.result.split(',')[1], // só base64
+                                email: dadosAtendente.email,
+                                filename: file.name
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            hideTypingIndicator();
+                            if (data && data.text) {
+                                addMessage("<b>Texto reconhecido na imagem:</b><br>" + data.text, 'bot');
+                                // Automaticamente já pergunta ao bot usando texto extraído
+                                buscarResposta(data.text);
+                            } else {
+                                addMessage("Não foi possível reconhecer o texto na imagem.", 'bot');
+                            }
+                        })
+                        .catch(e => {
+                            hideTypingIndicator();
+                            addMessage("Erro ao processar a imagem. Tente novamente.", 'bot');
+                        });
+                    };
+                    ocrReader.readAsDataURL(file);
+                }
+                // Selecionar arquivo
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        selectedFile = e.target.files[0];
+                        filePreviewName.textContent = selectedFile.name;
+                        filePreviewContainer.style.display = 'block';
+                    }
+                });
+
+                // Remover arquivo selecionado
+                filePreviewRemove.addEventListener('click', () => {
+                    selectedFile = null;
+                    fileInput.value = '';
+                    filePreviewContainer.style.display = 'none';
+                });
+
+                // Buscar perguntas
+                questionSearch.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list li');
+                    
+                    questions.forEach(question => {
+                        const text = question.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            question.style.display = 'flex';
+                        } else {
+                            question.style.display = 'none';
+                        }
+                    });
+                });
 
                 function showTypingIndicator() {
                     if (isTyping) return;
@@ -886,58 +1119,65 @@
                 }
 
                 function addMessage(message, sender, options = {}) {
-                    const { imageUrls = [], sourceRow = null } = options;
+                    const { imageUrls = [], sourceRow = null, file = null } = options;
+                    
                     const messageContainer = document.createElement('div');
-                    messageContainer.classList.add('message', sender === 'user' ? 'user-msg' : 'bot-msg');
-
-                    const textElement = document.createElement('div');
+                    messageContainer.classList.add('message-container', sender);
+                    
+                    const avatar = document.createElement('div');
+                    avatar.className = `avatar ${sender}`;
+                    avatar.innerHTML = sender === 'user' ? '👤' : '🤖';
+                    messageContainer.appendChild(avatar);
+                    
+                    const messageContent = document.createElement('div');
+                    messageContent.className = 'message-content';
+                    
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
                     if (message) {
-                        textElement.innerHTML = message.replace(/\n/g, '<br>');
+                        messageElement.innerHTML = message.replace(/\n/g, '<br>');
                         if (sender === 'bot') {
                             ultimaResposta = message;
                         }
                     }
-                    messageContainer.appendChild(textElement);
-
-                    if (sender === 'bot' && Array.isArray(imageUrls) && imageUrls.length > 0) {
-                        imageUrls.forEach(url => {
-                            if (url) {
-                                const imageElement = document.createElement('img');
-                                imageElement.src = url;
-                                imageElement.alt = "Imagem de suporte";
-                                messageContainer.appendChild(imageElement);
-                            }
-                        });
-                    }
+                    messageContent.appendChild(messageElement);
+                    
+                    // Adicionar timestamp
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const timeElement = document.createElement('div');
+                    timeElement.className = 'message-time';
+                    timeElement.textContent = timeString;
+                    messageContent.appendChild(timeElement);
                     
                     if (sender === 'bot' && message && !message.includes("assistente de atendimento")) {
                         const copyBtn = document.createElement('button');
                         copyBtn.classList.add('copy-btn');
                         copyBtn.innerHTML = '📋';
                         copyBtn.title = 'Copiar resposta';
-                        messageContainer.style.paddingRight = '40px';
+                        messageElement.style.paddingRight = '40px';
                         copyBtn.onclick = () => {
-                            const textToCopy = textElement.textContent.trim();
-                            const textArea = document.createElement("textarea");
-                            textArea.value = textToCopy;
-                            textArea.style.position = "fixed";
-                            textArea.style.left = "-9999px";
-                            document.body.appendChild(textArea);
-                            textArea.select();
-                            try {
-                                document.execCommand('copy');
+                            const textToCopy = messageElement.textContent.trim();
+                            navigator.clipboard.writeText(textToCopy).then(() => {
                                 copyBtn.classList.add('copied');
                                 setTimeout(() => { copyBtn.classList.remove('copied'); }, 2000);
-                            } catch (err) {
+                            }).catch(err => {
                                 console.error('Falha ao copiar texto: ', err);
-                            }
-                            document.body.removeChild(textArea);
+                            });
                         };
                         messageContainer.appendChild(copyBtn);
 
                         if (sourceRow) {
                             const feedbackContainer = document.createElement('div');
                             feedbackContainer.className = 'feedback-container';
+
+                            // Adicionar elementos de confetti
+                            for (let i = 0; i < 5; i++) {
+                                const confetti = document.createElement('div');
+                                confetti.className = 'feedback-confetti';
+                                confetti.style.left = `${i * 20}px`;
+                                feedbackContainer.appendChild(confetti);
+                            }
 
                             const positiveBtn = document.createElement('button');
                             positiveBtn.className = 'feedback-btn';
@@ -961,10 +1201,38 @@
 
                             feedbackContainer.appendChild(positiveBtn);
                             feedbackContainer.appendChild(negativeBtn);
-                            messageContainer.appendChild(feedbackContainer);
+                            messageContent.appendChild(feedbackContainer);
                         }
                     }
                     
+                    if (sender === 'bot' && Array.isArray(imageUrls) && imageUrls.length > 0) {
+                        imageUrls.forEach(url => {
+                            if (url) {
+                                const imageElement = document.createElement('img');
+                                imageElement.src = url;
+                                imageElement.alt = "Imagem de suporte";
+                                messageContent.appendChild(imageElement);
+                            }
+                        });
+                    }
+                    
+                    if (sender === 'user' && file) {
+                        const filePreview = document.createElement('div');
+                        filePreview.className = 'file-preview';
+                        
+                        const fileIcon = document.createElement('span');
+                        fileIcon.className = 'file-preview-icon';
+                        fileIcon.textContent = '📄';
+                        
+                        const fileName = document.createElement('span');
+                        fileName.textContent = file.name;
+                        
+                        filePreview.appendChild(fileIcon);
+                        filePreview.appendChild(fileName);
+                        messageContent.appendChild(filePreview);
+                    }
+                    
+                    messageContainer.appendChild(messageContent);
                     chatBox.appendChild(messageContainer);
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
@@ -972,7 +1240,7 @@
                 async function enviarFeedback(action, container) {
                     if (!ultimaPergunta || !ultimaResposta) return;
                     
-                    container.innerHTML = '<span style="font-size: 12px; color: #888;">Obrigado!</span>';
+                    container.innerHTML = '<span style="font-size: 12px; color: var(--cor-azul-medio);">Obrigado pelo feedback!</span>';
 
                     try {
                         const response = await fetch(BACKEND_URL, {
@@ -989,16 +1257,8 @@
                             })
                         });
                         
-                        const contentType = response.headers.get('content-type');
-                        if (!contentType || !contentType.includes('application/json')) {
-                            const text = await response.text();
-                            throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}...`);
-                        }
-                        
-                        const data = await response.json();
-                        
                         if (!response.ok) {
-                            throw new Error(data.message || 'Erro ao enviar feedback');
+                            throw new Error('Erro ao enviar feedback');
                         }
                     } catch (error) {
                         console.error("Erro ao enviar feedback:", error);
@@ -1016,12 +1276,6 @@
                         const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
                         const response = await fetch(url);
                         
-                        const contentType = response.headers.get('content-type');
-                        if (!contentType || !contentType.includes('application/json')) {
-                            const text = await response.text();
-                            throw new Error(`Resposta inválida do servidor: ${text.substring(0, 100)}...`);
-                        }
-                        
                         const data = await response.json();
                         hideTypingIndicator();
                         
@@ -1037,21 +1291,30 @@
                     } catch (error) {
                         hideTypingIndicator();
                         console.error("Erro ao buscar resposta:", error);
-                        
-                        let errorMsg = "Erro ao conectar com o serviço de respostas.";
-                        if (error.message.includes('Resposta inválida')) {
-                            errorMsg += " O servidor retornou uma resposta inesperada.";
-                        }
-                        
-                        addMessage(errorMsg, 'bot');
+                        addMessage("Erro ao conectar com o serviço de respostas. Por favor, tente novamente mais tarde.", 'bot');
                     }
                 }
 
                 function handleSendMessage(text) {
-                    if (!text || !text.trim()) return;
-                    addMessage(text, 'user');
-                    buscarResposta(text);
-                    if (userInput) userInput.value = '';
+                    if (!text && !selectedFile) return;
+                    
+                    if (selectedFile) {
+                        if (/^image\/(png|jpg|jpeg)$/.test(selectedFile.type)) {
+                            processImageFile(selectedFile);
+                        } else {
+                            addMessage("<b>Arquivo enviado:</b> " + selectedFile.name, 'user', { file: selectedFile });
+                            addMessage("Recebi seu arquivo. Ainda não processamos esse tipo automaticamente.", 'bot');
+                        }
+                        selectedFile = null;
+                        fileInput.value = '';
+                        filePreviewContainer.style.display = 'none';
+                    }
+
+                    if (text) {
+                        addMessage(text, 'user');
+                        buscarResposta(text);
+                        userInput.value = '';
+                    }
                 }
 
                 userInput.addEventListener('keydown', (e) => {
@@ -1065,10 +1328,14 @@
                     handleSendMessage(userInput.value);
                 });
                 
-                document.getElementById('quick-questions-list').addEventListener('click', (e) => {
-                    if (e.target && e.target.tagName === 'LI') {
-                        handleSendMessage(e.target.textContent);
-                    }
+                // Event listener para perguntas frequentes
+                document.querySelectorAll('#quick-questions-list li, #more-questions-list li').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const question = e.currentTarget.getAttribute('data-question');
+                        if (question) {
+                            handleSendMessage(question);
+                        }
+                    });
                 });
 
                 const expandableHeader = document.getElementById('expandable-faq-header');
@@ -1078,23 +1345,6 @@
                     expandableHeader.classList.toggle('expanded');
                     const isExpanded = moreQuestions.style.display === 'block';
                     moreQuestions.style.display = isExpanded ? 'none' : 'block';
-                });
-
-                document.getElementById('more-questions-list').addEventListener('click', (e) => {
-                    if (e.target && e.target.tagName === 'LI') {
-                        handleSendMessage(e.target.textContent);
-                    }
-                });
-
-                document.getElementById('news-list').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('acknowledge-btn') && !e.target.disabled) {
-                        const newsId = e.target.closest('.news-item').dataset.newsId;
-                        const acknowledgements = loadAcknowledgements();
-                        acknowledgements[newsId] = { acknowledged: true, date: getCurrentDate() };
-                        saveAcknowledgements(acknowledgements);
-                        updateNewsItemButton(e.target.closest('.news-item'), true);
-                        checkAndShowNewsPopup();
-                    }
                 });
 
                 themeSwitcher.addEventListener('click', () => {
@@ -1122,7 +1372,6 @@
                 addMessage(`${saudacao}, ${primeiroNome}! Sou o assistente de atendimento. Como posso ajudar?`, 'bot');
                 
                 setInitialTheme();
-                checkAndShowNewsPopup();
             }
 
             verificarIdentificacao();
