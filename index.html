@@ -64,19 +64,22 @@
             --cor-info: #1976D2;
         }
         
-        body {
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            background: var(--cor-fundo);
+                body {
+            font-family: 'Arial', sans-serif;
             color: var(--cor-texto-principal);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            padding: var(--espaco-md);
+            padding: 20px;
             box-sizing: border-box;
-            transition: background-color var(--transicao-normal), color var(--transicao-normal);
-        }
+            transition: background-color 0.3s, color 0.3s;
+            background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5)), url('https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed.png?raw=true');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         
         .app-wrapper {
             display: grid;
