@@ -929,7 +929,7 @@
 
         <div class="chat-container panel">
             <div class="chat-header">
-                <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true" alt="Logo" class="chat-logo">
+                <img src="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true" alt="Logo" class="chat-logo">
                 <h2 class="chat-title">Assistente Virtual <span class="status-indicator"></span></h2>
                 <p class="chat-subtitle">Como posso te ajudar hoje?</p>
                 <button id="theme-switcher" title="Alterar tema">☀️</button>
@@ -938,6 +938,8 @@
             <div class="input-area">
                 <input type="file" id="file-input" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                 <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." autocomplete="off">
+                <button class="emoji-picker-btn" title="Emojis">😊</button>
+                <div class="emoji-picker" id="emoji-picker"></div>
                 <button id="send-button" class="action-button" title="Enviar mensagem">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -987,6 +989,7 @@
             const identificacaoOverlay = document.getElementById('identificacao-overlay');
             const identificacaoForm = document.getElementById('identificacao-form');
             const appWrapper = document.querySelector('.app-wrapper');
+            const emojis = ['😀', '😂', '😊', '😍', '👍', '👎', '❤️', '🔥', '🎉', '🤔', '😎', '🙏'];
 
             function verificarIdentificacao() {
                 const DOMINIO_PERMITIDO = "@velotax.com.br";
