@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Interno com ChatBot Aprimorado</title>
+    <title>Painel Interno com ChatBot - Tema Clássico</title>
     <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
-    <style>
-        :root {
+   <style>
+    /* --- 🎨 PALETA DE CORES E VARIÁVEIS (TEMA CLÁSSICO) 🎨 --- */
+    :root {
             /* Cores base */
             --cor-fundo: #f0f4f8;
             --cor-container: #ffffff;
@@ -76,7 +77,12 @@
             padding: var(--espaco-md);
             box-sizing: border-box;
             transition: background-color var(--transicao-normal), color var(--transicao-normal);
-        }
+                /* ✅ 1. PROPRIEDADES DA IMAGEM DE FUNDO ADICIONADAS AQUI */
+        background-image: url('https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed.png?raw=true');
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;}
         
         .app-wrapper {
             display: grid;
@@ -819,9 +825,51 @@
                 padding: 0;
             }
             
-            .message-container {
-                max-width: 90%;
-            }
+            /* --- 📋 ESTILOS DO BOTÃO COPIAR --- */
+.message-container {
+    position: relative; /* Necessário para posicionar o botão corretamente */
+}
+
+.copy-btn {
+    position: absolute;
+    top: 12px;
+    right: -40px; /* Posiciona o botão fora da bolha da mensagem */
+    background: var(--cor-container);
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--cor-texto-secundario);
+    
+    /* Inicia invisível e com transição suave */
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all var(--transicao-normal);
+}
+
+/* Faz o botão aparecer quando o mouse está sobre a mensagem */
+.message-container:hover .copy-btn {
+    opacity: 1;
+    transform: scale(1);
+    right: -16px; /* Move o botão para mais perto */
+}
+
+.copy-btn:hover {
+    background-color: var(--cor-fundo);
+    color: var(--cor-azul-vibrante);
+    transform: scale(1.1); /* Efeito de zoom no hover */
+}
+
+/* Estilo para quando o texto é copiado com sucesso */
+.copy-btn.copied {
+    color: var(--cor-sucesso);
+    transform: scale(1.1);
+}
             
             .avatar {
                 width: 30px;
@@ -871,7 +919,7 @@
                     <label for="email-input" style="display: block; margin-bottom: 5px; font-weight: bold;">E-mail Corporativo: </label>
                     <input type="email" id="email-input" required style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
                 </div>
-                <button type="submit" id="identificacao-submit" style="padding: 12px 20px; width: 100%; font-size: 16px; font-weight: bold; border: none; background-color: var(--cor-azul-medio); color: white; border-radius: 8px; cursor: pointer; margin-top: 10px;">Entrar</button>
+                <button type="submit" id="identificacao-submit" style="padding: 12px 20px; width: 100%; font-size: 16px; font-weight: bold; border: none; background-color: var(--cor-azul-vibrante); color: white; border-radius: 8px; cursor: pointer; margin-top: 10px;">Entrar</button>
             </form>
             <p id="identificacao-error" style="display:none; color: var(--cor-erro); margin-top: 15px;">Acesso permitido apenas para e-mails @velotax.com.br!</p>
         </div>
@@ -929,35 +977,23 @@
 
         <div class="chat-container panel">
             <div class="chat-header">
-                <img src="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true" alt="Logo" class="chat-logo">
+                <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true" alt="Logo" class="chat-logo">
                 <h2 class="chat-title">Assistente Virtual <span class="status-indicator"></span></h2>
-                <p class="chat-subtitle">Como posso te ajudar hoje?</p>
-                <button id="theme-switcher" title="Alterar tema">☀️</button>
+                 <button id="theme-switcher" title="Alterar tema">☀️/</button>
             </div>
             <div class="chat-box" id="chat-box"></div>
             <div class="input-area">
-                <input type="file" id="file-input" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-                <input type="text" id="user-input" placeholder="Digite sua mensagem aqui..." autocomplete="off">
-                <button class="emoji-picker-btn" title="Emojis">😊</button>
-                <div class="emoji-picker" id="emoji-picker"></div>
+                <input type="text" id="user-input" placeholder="Digite sua mensagem..." autocomplete="off">
                 <button id="send-button" class="action-button" title="Enviar mensagem">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z"></path></svg>
                 </button>
-                <button class="gemini-button" onclick="window.open('https://gemini.google.com/app?hl=pt-BR', '_blank')" title="Obter ajuda do Gemini AI">
+
+                 <button class="gemini-button" onclick="window.open('https://gemini.google.com/app?hl=pt-BR', '_blank')" title="Obter ajuda do Gemini AI">
                     ✦
                 </button>
             </div>
-            <div id="file-preview-container" style="display: none; padding: 0 var(--espaco-md) var(--espaco-md);">
-                <div class="file-preview">
-                    <span class="file-preview-icon">📄</span>
-                    <span id="file-preview-name">arquivo.pdf</span>
-                    <span class="file-preview-remove" id="file-preview-remove">✕</span>
-                </div>
-            </div>
         </div>
+
         <div id="news-panel" class="panel">
             <div class="panel-header">
                 <h2>Notícias e Alertas</h2>
@@ -983,13 +1019,11 @@
             </div>
         </div>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const identificacaoOverlay = document.getElementById('identificacao-overlay');
             const identificacaoForm = document.getElementById('identificacao-form');
             const appWrapper = document.querySelector('.app-wrapper');
-            const emojis = ['😀', '😂', '😊', '😍', '👍', '👎', '❤️', '🔥', '🎉', '🤔', '😎', '🙏'];
 
             function verificarIdentificacao() {
                 const DOMINIO_PERMITIDO = "@velotax.com.br";
@@ -1020,11 +1054,7 @@
                 const errorMsg = document.getElementById('identificacao-error');
 
                 if (nome && email && email.endsWith(DOMINIO_PERMITIDO)) {
-                    const dadosAtendente = { 
-                        nome, 
-                        email, 
-                        timestamp: Date.now() 
-                    };
+                    const dadosAtendente = { nome, email, timestamp: Date.now() };
                     localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
                     identificacaoOverlay.style.display = 'none';
                     appWrapper.style.visibility = 'visible';
@@ -1035,414 +1065,256 @@
             });
 
             function iniciarBot(dadosAtendente) {
-                const chatBox = document.getElementById('chat-box');
-                const userInput = document.getElementById('user-input');
-                const sendButton = document.getElementById('send-button');
-                const themeSwitcher = document.getElementById('theme-switcher');
-                const body = document.body;
-                const emojiPickerBtn = document.querySelector('.emoji-picker-btn');
-                const emojiPicker = document.getElementById('emoji-picker');
-                const fileInput = document.getElementById('file-input');
-                const filePreviewContainer = document.getElementById('file-preview-container');
-                const filePreviewName = document.getElementById('file-preview-name');
-                const filePreviewRemove = document.getElementById('file-preview-remove');
-                const questionSearch = document.getElementById('question-search');
-                
-                let ultimaPergunta = '';
-                let ultimaResposta = '';
-                let ultimaLinhaDaFonte = null;
-                let isTyping = false;
-                let selectedFile = null;
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const themeSwitcher = document.getElementById('theme-switcher');
+    const body = document.body;
+    const questionSearch = document.getElementById('question-search');
+    
+    let ultimaPergunta = '';
+    let ultimaLinhaDaFonte = null;
+    let isTyping = false;
+    
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzo0z6SUHZMzwtP3TSeUzNHVzTNyeJgqWY3c5qzoRJbzSj_omx7GuIKIzZ4cTsVWyYuwA/exec";
 
-                // URL do seu backend Google Apps Script
-                const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzo0z6SUHZMzwtP3TSeUzNHVzTNyeJgqWY3c5qzoRJbzSj_omx7GuIKIzZ4cTsVWyYuwA/exec";
+    // ✅ FUNÇÃO DE AJUDA PARA COPIAR (A QUE ESTAVA FALTANDO)
+   async function copiarTextoParaClipboard(texto) {
+    try {
+        // Tenta o método moderno. Ele pode falhar por falta de permissão.
+        await navigator.clipboard.writeText(texto);
+        return true; // Sucesso com o método moderno!
+    } catch (err) {
+        // Se o método moderno falhar, o 'catch' é ativado e tentamos o método antigo.
+        console.warn('Método moderno de cópia falhou, tentando fallback...', err);
+        
+        const textArea = document.createElement("textarea");
+        textArea.value = texto;
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
 
-                // Carregar emojis no picker
-                emojis.forEach(emoji => {
-                    const emojiBtn = document.createElement('button');
-                    emojiBtn.textContent = emoji;
-                    emojiBtn.style.fontSize = '24px';
-                    emojiBtn.style.border = 'none';
-                    emojiBtn.style.background = 'none';
-                    emojiBtn.style.cursor = 'pointer';
-                    emojiBtn.style.padding = '5px';
-                    emojiBtn.addEventListener('click', () => {
-                        userInput.value += emoji;
-                        userInput.focus();
-                        emojiPicker.classList.remove('show');
-                    });
-                    emojiPicker.appendChild(emojiBtn);
-                });
-                
-                function processImageFile(file) {
-                    if (!/^image\/(png|jpg|jpeg)$/.test(file.type)) {
-                        addMessage("Apenas imagens (PNG, JPG, JPEG) são suportadas para leitura automática.", 'bot');
-                        return;
-                    }
-                    
-                    // Mostra preview ao usuário
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        addMessage('<b>Imagem enviada:</b><br><img src="' + e.target.result + '" style="max-width:120px;max-height:120px;">', 'user', {file});
-                    };
-                    reader.readAsDataURL(file);
-
-                    // Envia para OCR no backend
-                    const ocrReader = new FileReader();
-                    ocrReader.onload = function(e) {
-                        showTypingIndicator();
-                        fetch(BACKEND_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                action: 'processImage',
-                                image: e.target.result.split(',')[1], // só base64
-                                email: dadosAtendente.email,
-                                filename: file.name
-                            })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            hideTypingIndicator();
-                            if (data && data.text) {
-                                addMessage("<b>Texto reconhecido na imagem:</b><br>" + data.text, 'bot');
-                                // Automaticamente já pergunta ao bot usando texto extraído
-                                buscarResposta(data.text);
-                            } else {
-                                addMessage("Não foi possível reconhecer o texto na imagem.", 'bot');
-                            }
-                        })
-                        .catch(e => {
-                            hideTypingIndicator();
-                            addMessage("Erro ao processar a imagem. Tente novamente.", 'bot');
-                        });
-                    };
-                    ocrReader.readAsDataURL(file);
-                }
-
-                // Alternar emoji picker
-                emojiPickerBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    emojiPicker.classList.toggle('show');
-                });
-
-                // Fechar emoji picker ao clicar fora
-                document.addEventListener('click', () => {
-                    emojiPicker.classList.remove('show');
-                });
-
-                // Selecionar arquivo
-                fileInput.addEventListener('change', (e) => {
-                    if (e.target.files.length > 0) {
-                        selectedFile = e.target.files[0];
-                        filePreviewName.textContent = selectedFile.name;
-                        filePreviewContainer.style.display = 'block';
-                    }
-                });
-
-                // Remover arquivo selecionado
-                filePreviewRemove.addEventListener('click', () => {
-                    selectedFile = null;
-                    fileInput.value = '';
-                    filePreviewContainer.style.display = 'none';
-                });
-
-                // Buscar perguntas
-                questionSearch.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list li');
-                    
-                    questions.forEach(question => {
-                        const text = question.textContent.toLowerCase();
-                        if (text.includes(searchTerm)) {
-                            question.style.display = 'flex';
-                        } else {
-                            question.style.display = 'none';
-                        }
-                    });
-                });
-
-                function showTypingIndicator() {
-                    if (isTyping) return;
-                    
-                    isTyping = true;
-                    const typingContainer = document.createElement('div');
-                    typingContainer.className = 'typing-indicator';
-                    typingContainer.id = 'typing-indicator';
-                    
-                    for (let i = 0; i < 3; i++) {
-                        const dot = document.createElement('div');
-                        dot.className = 'typing-dot';
-                        typingContainer.appendChild(dot);
-                    }
-                    
-                    chatBox.appendChild(typingContainer);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-
-                function hideTypingIndicator() {
-                    isTyping = false;
-                    const typingIndicator = document.getElementById('typing-indicator');
-                    if (typingIndicator) {
-                        typingIndicator.remove();
-                    }
-                }
-
-                function addMessage(message, sender, options = {}) {
-                    const { imageUrls = [], sourceRow = null, file = null } = options;
-                    
-                    const messageContainer = document.createElement('div');
-                    messageContainer.classList.add('message-container', sender);
-                    
-                    const avatar = document.createElement('div');
-                    avatar.className = `avatar ${sender}`;
-                    avatar.innerHTML = sender === 'user' ? '👤' : '🤖';
-                    messageContainer.appendChild(avatar);
-                    
-                    const messageContent = document.createElement('div');
-                    messageContent.className = 'message-content';
-                    
-                    const messageElement = document.createElement('div');
-                    messageElement.classList.add('message');
-                    if (message) {
-                        messageElement.innerHTML = message.replace(/\n/g, '<br>');
-                        if (sender === 'bot') {
-                            ultimaResposta = message;
-                        }
-                    }
-                    messageContent.appendChild(messageElement);
-                    
-                    // Adicionar timestamp
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const timeElement = document.createElement('div');
-                    timeElement.className = 'message-time';
-                    timeElement.textContent = timeString;
-                    messageContent.appendChild(timeElement);
-                    
-                    if (sender === 'bot' && message && !message.includes("assistente de atendimento")) {
-                        const copyBtn = document.createElement('button');
-                        copyBtn.classList.add('copy-btn');
-                        copyBtn.innerHTML = '📋';
-                        copyBtn.title = 'Copiar resposta';
-                        messageElement.style.paddingRight = '40px';
-                        copyBtn.onclick = () => {
-                            const textToCopy = messageElement.textContent.trim();
-                            navigator.clipboard.writeText(textToCopy).then(() => {
-                                copyBtn.classList.add('copied');
-                                setTimeout(() => { copyBtn.classList.remove('copied'); }, 2000);
-                            }).catch(err => {
-                                console.error('Falha ao copiar texto: ', err);
-                            });
-                        };
-                        messageContainer.appendChild(copyBtn);
-
-                        if (sourceRow) {
-                            const feedbackContainer = document.createElement('div');
-                            feedbackContainer.className = 'feedback-container';
-
-                            // Adicionar elementos de confetti
-                            for (let i = 0; i < 5; i++) {
-                                const confetti = document.createElement('div');
-                                confetti.className = 'feedback-confetti';
-                                confetti.style.left = `${i * 20}px`;
-                                feedbackContainer.appendChild(confetti);
-                            }
-
-                            const positiveBtn = document.createElement('button');
-                            positiveBtn.className = 'feedback-btn';
-                            positiveBtn.innerHTML = '👍';
-                            positiveBtn.title = 'Resposta útil';
-                            positiveBtn.onclick = () => {
-                                positiveBtn.classList.add('active', 'positive');
-                                negativeBtn.classList.remove('active');
-                                enviarFeedback('logFeedbackPositivo', feedbackContainer);
-                            };
-
-                            const negativeBtn = document.createElement('button');
-                            negativeBtn.className = 'feedback-btn';
-                            negativeBtn.innerHTML = '👎';
-                            negativeBtn.title = 'Resposta incorreta';
-                            negativeBtn.onclick = () => {
-                                negativeBtn.classList.add('active', 'negative');
-                                positiveBtn.classList.remove('active');
-                                enviarFeedback('logFeedbackNegativo', feedbackContainer);
-                            };
-
-                            feedbackContainer.appendChild(positiveBtn);
-                            feedbackContainer.appendChild(negativeBtn);
-                            messageContent.appendChild(feedbackContainer);
-                        }
-                    }
-                    
-                    if (sender === 'bot' && Array.isArray(imageUrls) && imageUrls.length > 0) {
-                        imageUrls.forEach(url => {
-                            if (url) {
-                                const imageElement = document.createElement('img');
-                                imageElement.src = url;
-                                imageElement.alt = "Imagem de suporte";
-                                messageContent.appendChild(imageElement);
-                            }
-                        });
-                    }
-                    
-                    if (sender === 'user' && file) {
-                        const filePreview = document.createElement('div');
-                        filePreview.className = 'file-preview';
-                        
-                        const fileIcon = document.createElement('span');
-                        fileIcon.className = 'file-preview-icon';
-                        fileIcon.textContent = '📄';
-                        
-                        const fileName = document.createElement('span');
-                        fileName.textContent = file.name;
-                        
-                        filePreview.appendChild(fileIcon);
-                        filePreview.appendChild(fileName);
-                        messageContent.appendChild(filePreview);
-                    }
-                    
-                    messageContainer.appendChild(messageContent);
-                    chatBox.appendChild(messageContainer);
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-                
-                async function enviarFeedback(action, container) {
-                    if (!ultimaPergunta || !ultimaResposta) return;
-                    
-                    container.innerHTML = '<span style="font-size: 12px; color: var(--cor-azul-medio);">Obrigado pelo feedback!</span>';
-
-                    try {
-                        const response = await fetch(BACKEND_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                action: action,
-                                question: ultimaPergunta,
-                                sourceRow: ultimaLinhaDaFonte || 'N/A',
-                                email: dadosAtendente.email,
-                                resposta: ultimaResposta
-                            })
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error('Erro ao enviar feedback');
-                        }
-                    } catch (error) {
-                        console.error("Erro ao enviar feedback:", error);
-                    }
-                }
-                
-                async function buscarResposta(textoDaPergunta) {
-                    ultimaPergunta = textoDaPergunta;
-                    ultimaLinhaDaFonte = null;
-                    if (!textoDaPergunta.trim()) return;
-
-                    showTypingIndicator();
-                    
-                    try {
-                        const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                        const response = await fetch(url);
-                        
-                        const data = await response.json();
-                        hideTypingIndicator();
-                        
-                        if (data.status === 'sucesso') {
-                            ultimaLinhaDaFonte = data.sourceRow || null;
-                            addMessage(data.resposta, 'bot', { 
-                                imageUrls: data.imagens || [], 
-                                sourceRow: data.sourceRow 
-                            });
-                        } else {
-                            addMessage(data.mensagem || "Ocorreu um erro desconhecido.", 'bot');
-                        }
-                    } catch (error) {
-                        hideTypingIndicator();
-                        console.error("Erro ao buscar resposta:", error);
-                        addMessage("Erro ao conectar com o serviço de respostas. Por favor, tente novamente mais tarde.", 'bot');
-                    }
-                }
-
-                function handleSendMessage(text) {
-                    if (!text && !selectedFile) return;
-                    
-                    if (selectedFile) {
-                        if (/^image\/(png|jpg|jpeg)$/.test(selectedFile.type)) {
-                            processImageFile(selectedFile);
-                        } else {
-                            addMessage("<b>Arquivo enviado:</b> " + selectedFile.name, 'user', { file: selectedFile });
-                            addMessage("Recebi seu arquivo. Ainda não processamos esse tipo automaticamente.", 'bot');
-                        }
-                        selectedFile = null;
-                        fileInput.value = '';
-                        filePreviewContainer.style.display = 'none';
-                    }
-
-                    if (text) {
-                        addMessage(text, 'user');
-                        buscarResposta(text);
-                        userInput.value = '';
-                    }
-                }
-
-                userInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') { 
-                        e.preventDefault(); 
-                        handleSendMessage(userInput.value); 
-                    }
-                });
-                
-                sendButton.addEventListener('click', () => {
-                    handleSendMessage(userInput.value);
-                });
-                
-                // Event listener para perguntas frequentes
-                document.querySelectorAll('#quick-questions-list li, #more-questions-list li').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        const question = e.currentTarget.getAttribute('data-question');
-                        if (question) {
-                            handleSendMessage(question);
-                        }
-                    });
-                });
-
-                const expandableHeader = document.getElementById('expandable-faq-header');
-                const moreQuestions = document.getElementById('more-questions');
-
-                expandableHeader.addEventListener('click', () => {
-                    expandableHeader.classList.toggle('expanded');
-                    const isExpanded = moreQuestions.style.display === 'block';
-                    moreQuestions.style.display = isExpanded ? 'none' : 'block';
-                });
-
-                themeSwitcher.addEventListener('click', () => {
-                    body.classList.toggle('dark-theme');
-                    const isDark = body.classList.contains('dark-theme');
-                    themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
-                    localStorage.setItem('theme', isDark ? 'dark-theme' : 'light-theme');
-                });
-                
-                function setInitialTheme() {
-                    const savedTheme = localStorage.getItem('theme');
-                    if (savedTheme === 'dark-theme') {
-                        body.classList.add('dark-theme');
-                        themeSwitcher.innerHTML = '🌙';
-                    } else {
-                        body.classList.remove('dark-theme');
-                        themeSwitcher.innerHTML = '☀️';
-                    }
-                }
-                
-                const primeiroNome = dadosAtendente.nome.split(' ')[0];
-                const hora = new Date().getHours();
-                let saudacao = (hora >= 5 && hora < 12) ? 'Bom dia' : 
-                             (hora >= 12 && hora < 18) ? 'Boa tarde' : 'Boa noite';
-                addMessage(`${saudacao}, ${primeiroNome}! Sou o assistente de atendimento. Como posso ajudar?`, 'bot');
-                
-                setInitialTheme();
+        try {
+            // Tenta executar o comando de cópia antigo
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            if (successful) {
+                return true; // Sucesso com o método antigo!
+            } else {
+                return false; // O comando de cópia antigo não foi bem-sucedido
             }
+        } catch (fallbackErr) {
+            console.error('Falha total ao copiar com ambos os métodos:', fallbackErr);
+            document.body.removeChild(textArea);
+            return false; // Falha total
+        }
+    }
+}
+
+    questionSearch.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list li');
+        
+        questions.forEach(question => {
+            const text = question.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                question.style.display = 'block';
+            } else {
+                question.style.display = 'none';
+            }
+        });
+    });
+
+    function showTypingIndicator() {
+        if (isTyping) return;
+        isTyping = true;
+        const typingContainer = document.createElement('div');
+        typingContainer.className = 'message-container bot typing-indicator';
+        typingContainer.id = 'typing-indicator';
+        typingContainer.innerHTML = `
+            <div class="avatar bot">🤖</div>
+            <div class="message-content">
+                <div class="message">
+                    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                </div>
+            </div>`;
+        chatBox.appendChild(typingContainer);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function hideTypingIndicator() {
+        isTyping = false;
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    function addMessage(message, sender, options = {}) {
+        const { sourceRow = null } = options;
+        
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container', sender);
+        
+        const avatarDiv = `<div class="avatar">${sender === 'user' ? '👤' : '🤖'}</div>`;
+        
+        const messageContentDiv = `
+            <div class="message-content">
+                <div class="message">${message.replace(/\n/g, '<br>')}</div>
+            </div>`;
+
+        messageContainer.innerHTML = sender === 'user' ? messageContentDiv + avatarDiv : avatarDiv + messageContentDiv;
+        
+        chatBox.appendChild(messageContainer);
+
+        if (sender === 'bot' && sourceRow) {
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.title = 'Copiar resposta';
+            copyBtn.innerHTML = '📋';
+
+            // ATUALIZADO PARA USAR A FUNÇÃO DE AJUDA
+            copyBtn.onclick = () => {
+                const textToCopy = messageContainer.querySelector('.message').textContent;
+                copiarTextoParaClipboard(textToCopy).then(success => {
+                    if (success) {
+                        copyBtn.innerHTML = '✅';
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '📋';
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
+                    } else {
+                        alert('Não foi possível copiar o texto.');
+                    }
+                });
+            };
+            messageContainer.appendChild(copyBtn);
+
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.className = 'feedback-container';
+
+            const positiveBtn = document.createElement('button');
+            positiveBtn.className = 'feedback-btn';
+            positiveBtn.innerHTML = '👍';
+            positiveBtn.title = 'Resposta útil';
+            positiveBtn.onclick = () => enviarFeedback('logFeedbackPositivo', feedbackContainer);
+            
+            const negativeBtn = document.createElement('button');
+            negativeBtn.className = 'feedback-btn';
+            negativeBtn.innerHTML = '👎';
+            negativeBtn.title = 'Resposta incorreta';
+            negativeBtn.onclick = () => enviarFeedback('logFeedbackNegativo', feedbackContainer);
+            
+            feedbackContainer.appendChild(positiveBtn);
+            feedbackContainer.appendChild(negativeBtn);
+            messageContainer.querySelector('.message-content').appendChild(feedbackContainer);
+        }
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    async function enviarFeedback(action, container) {
+        if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
+        
+        container.innerHTML = '<span style="font-size: 12px; color: var(--cor-texto-secundario);">Obrigado!</span>';
+
+        try {
+            await fetch(BACKEND_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    action: action,
+                    question: ultimaPergunta,
+                    sourceRow: ultimaLinhaDaFonte,
+                    email: dadosAtendente.email
+                })
+            });
+        } catch (error) {
+            console.error("Erro ao enviar feedback:", error);
+        }
+    }
+    
+    async function buscarResposta(textoDaPergunta) {
+        ultimaPergunta = textoDaPergunta;
+        ultimaLinhaDaFonte = null;
+        if (!textoDaPergunta.trim()) return;
+
+        showTypingIndicator();
+        
+        try {
+            const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`Erro de rede: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            hideTypingIndicator();
+            
+            if (data.status === 'sucesso') {
+                ultimaLinhaDaFonte = data.sourceRow;
+                addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
+            } else {
+                addMessage(data.mensagem || "Ocorreu um erro ao processar sua pergunta.", 'bot');
+            }
+        } catch (error) {
+            hideTypingIndicator();
+            console.error("Erro ao buscar resposta:", error);
+            addMessage("Erro de conexão. Verifique o console (F12) para mais detalhes.", 'bot');
+        }
+    }
+
+    function handleSendMessage(text) {
+        const trimmedText = text.trim();
+        if (!trimmedText) return;
+        addMessage(trimmedText, 'user');
+        buscarResposta(trimmedText);
+        userInput.value = '';
+    }
+
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(userInput.value); }
+    });
+    
+    sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
+    
+    document.querySelectorAll('#quick-questions-list li, #more-questions-list li').forEach(item => {
+        item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
+    });
+
+    document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
+        e.currentTarget.classList.toggle('expanded');
+        document.getElementById('more-questions').style.display = e.currentTarget.classList.contains('expanded') ? 'block' : 'none';
+    });
+
+    themeSwitcher.addEventListener('click', () => {
+        body.classList.toggle('dark-theme');
+        const isDark = body.classList.contains('dark-theme');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
+    });
+    
+    function setInitialTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            themeSwitcher.innerHTML = '🌙';
+        } else {
+            body.classList.remove('dark-theme');
+            themeSwitcher.innerHTML = '☀️';
+        }
+    }
+    
+    const primeiroNome = dadosAtendente.nome.split(' ')[0];
+    addMessage(`Olá, ${primeiroNome}! Como posso te ajudar?`, 'bot');
+    
+    setInitialTheme();
+}
 
             verificarIdentificacao();
         });
