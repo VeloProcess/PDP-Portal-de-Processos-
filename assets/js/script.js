@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = document.body;
         
         // <<<--- VERIFIQUE E COLE SUA URL AQUI ---<<<
-        const CHAT_API_URL = "SUA_URL_DO_APPS_SCRIPT_AQUI"; 
+        const CHAT_API_URL = "https://script.google.com/macros/s/AKfycbzo0z6SUHZMzwtP3TSeUzNHVzTNyeJgqWY3c5qzoRJbzSj_omx7GuIKIzZ4cTsVWyYuwA/exec"; 
 
         let ultimoTopico = '';
         const perguntasDeContinuacao = [
