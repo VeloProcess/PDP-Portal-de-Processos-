@@ -6,6 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Função para enviar o formulário de login ou registro
 function submitForm(action) {
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        console.error('Biblioteca do Google Apps Script não carregada. Verifique a tag <script> no index.html.');
+        const errorMessage = document.getElementById('identificacao-error');
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'Erro: Não foi possível conectar ao servidor. Tente novamente mais tarde.';
+        return;
+    }
+
     const email = document.getElementById('email-input').value;
     const password = document.getElementById('password-input').value;
     const errorMessage = document.getElementById('identificacao-error');
@@ -71,6 +79,11 @@ function initializeChatbot() {
 
     // Função para enviar mensagem ao Apps Script
     function sendMessage() {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            appendMessage('bot', 'Erro: Não foi possível conectar ao servidor. Verifique a conexão.');
+            return;
+        }
+
         const question = userInput.value.trim();
         if (!question) return;
 
@@ -140,6 +153,11 @@ function initializeChatbot() {
 
     // Função para enviar feedback
     function sendFeedback(tipo, sourceRow, question) {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            appendMessage('bot', 'Erro: Não foi possível conectar ao servidor para enviar feedback.');
+            return;
+        }
+
         const payload = {
             action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
             question: question,
