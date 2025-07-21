@@ -1,58 +1,59 @@
-// Inicializa a interface: mostra o overlay e esconde o painel
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('identificacao-overlay').style.display = 'flex';
     document.querySelector('.app-wrapper').style.display = 'none';
 });
 
+// Função para verificar se a biblioteca do Google Apps Script está carregada
+function waitForGoogleScript(callback) {
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+        callback();
+    } else {
+        console.warn('Biblioteca do Google Apps Script ainda não carregada. Aguardando...');
+        setTimeout(() => waitForGoogleScript(callback), 500);
+    }
+}
+
 // Função para enviar o formulário de login ou registro
 function submitForm(action) {
-    if (typeof google === 'undefined' || !google.script || !google.script.run) {
-        console.error('Biblioteca do Google Apps Script não carregada. Verifique a tag <script> no index.html.');
-        const errorMessage = document.getElementById('identificacao-error');
-        errorMessage.style.display = 'block';
-        errorMessage.textContent = 'Erro: Não foi possível conectar ao servidor. Tente novamente mais tarde.';
-        return;
-    }
-
-    const email = document.getElementById('email-input').value;
-    const password = document.getElementById('password-input').value;
     const errorMessage = document.getElementById('identificacao-error');
+    waitForGoogleScript(() => {
+        const email = document.getElementById('email-input').value;
+        const password = document.getElementById('password-input').value;
 
-    // Validação do e-mail corporativo
-    if (!email.endsWith('@velotax.com.br')) {
-        errorMessage.style.display = 'block';
-        errorMessage.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-        return;
-    }
-
-    // Preparar os dados para enviar ao Apps Script
-    const payload = {
-        action: action,
-        email: email,
-        senha: password
-    };
-
-    // Enviar a requisição ao Apps Script
-    google.script.run
-        .withSuccessHandler(function(response) {
-            if (response.status === 'sucesso') {
-                errorMessage.style.display = 'none';
-                document.getElementById('identificacao-overlay').style.display = 'none';
-                document.querySelector('.app-wrapper').style.display = 'grid';
-                // Armazenar o e-mail para uso no chatbot
-                localStorage.setItem('userEmail', email);
-                // Inicializar o chatbot
-                initializeChatbot();
-            } else {
-                errorMessage.style.display = 'block';
-                errorMessage.textContent = response.mensagem;
-            }
-        })
-        .withFailureHandler(function(error) {
+        // Validação do e-mail corporativo
+        if (!email.endsWith('@velotax.com.br')) {
             errorMessage.style.display = 'block';
-            errorMessage.textContent = 'Erro ao processar: ' + error.message;
-        })
-        .processForm(payload);
+            errorMessage.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
+            return;
+        }
+
+        // Preparar os dados para enviar ao Apps Script
+        const payload = {
+            action: action,
+            email: email,
+            senha: password
+        };
+
+        // Enviar a requisição ao Apps Script
+        google.script.run
+            .withSuccessHandler(function(response) {
+                if (response.status === 'sucesso') {
+                    errorMessage.style.display = 'none';
+                    document.getElementById('identificacao-overlay').style.display = 'none';
+                    document.querySelector('.app-wrapper').style.display = 'grid';
+                    localStorage.setItem('userEmail', email);
+                    initializeChatbot();
+                } else {
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = response.mensagem;
+                }
+            })
+            .withFailureHandler(function(error) {
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Erro ao processar: ' + error.message;
+            })
+            .processForm(payload);
+    });
 }
 
 // Função para inicializar o chatbot
@@ -79,11 +80,6 @@ function initializeChatbot() {
 
     // Função para enviar mensagem ao Apps Script
     function sendMessage() {
-        if (typeof google === 'undefined' || !google.script || !google.script.run) {
-            appendMessage('bot', 'Erro: Não foi possível conectar ao servidor. Verifique a conexão.');
-            return;
-        }
-
         const question = userInput.value.trim();
         if (!question) return;
 
@@ -91,19 +87,21 @@ function initializeChatbot() {
         appendMessage('user', question);
         userInput.value = '';
 
-        // Enviar a pergunta ao Apps Script
-        google.script.run
-            .withSuccessHandler(function(response) {
-                if (response.status === 'sucesso') {
-                    appendMessage('bot', response.resposta, response.sourceRow);
-                } else {
-                    appendMessage('bot', response.mensagem);
-                }
-            })
-            .withFailureHandler(function(error) {
-                appendMessage('bot', 'Erro ao obter resposta: ' + error.message);
-            })
-            .doGet({ parameter: { pergunta: question, email: localStorage.getItem('userEmail') } });
+        waitForGoogleScript(() => {
+            // Enviar a pergunta ao Apps Script
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response.status === 'sucesso') {
+                        appendMessage('bot', response.resposta, response.sourceRow);
+                    } else {
+                        appendMessage('bot', response.mensagem);
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    appendMessage('bot', 'Erro ao obter resposta: ' + error.message);
+                })
+                .doGet({ parameter: { pergunta: question, email: localStorage.getItem('userEmail') } });
+        });
     }
 
     // Função para adicionar mensagens ao chat
@@ -153,26 +151,23 @@ function initializeChatbot() {
 
     // Função para enviar feedback
     function sendFeedback(tipo, sourceRow, question) {
-        if (typeof google === 'undefined' || !google.script || !google.script.run) {
-            appendMessage('bot', 'Erro: Não foi possível conectar ao servidor para enviar feedback.');
-            return;
-        }
+        waitForGoogleScript(() => {
+            const payload = {
+                action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
+                question: question,
+                sourceRow: sourceRow,
+                email: localStorage.getItem('userEmail')
+            };
 
-        const payload = {
-            action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
-            question: question,
-            sourceRow: sourceRow,
-            email: localStorage.getItem('userEmail')
-        };
-
-        google.script.run
-            .withSuccessHandler(function(response) {
-                appendMessage('bot', 'Feedback registrado. Obrigado!');
-            })
-            .withFailureHandler(function(error) {
-                appendMessage('bot', 'Erro ao registrar feedback: ' + error.message);
-            })
-            .processForm(payload);
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    appendMessage('bot', 'Feedback registrado. Obrigado!');
+                })
+                .withFailureHandler(function(error) {
+                    appendMessage('bot', 'Erro ao registrar feedback: ' + error.message);
+                })
+                .processForm(payload);
+        });
     }
 }
 
