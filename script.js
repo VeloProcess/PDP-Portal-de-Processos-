@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
          document.querySelector('.app-wrapper').style.display = 'none';
      });
 
-     function waitForGoogleScript(callback, timeout = 5000, interval = 500) {
+     function waitForGoogleScript(callback, timeout = 10000, interval = 500) {
          const startTime = Date.now();
          function check() {
              if (typeof google !== 'undefined' && google.script && google.script.run) {
