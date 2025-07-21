@@ -1,6 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('identificacao-overlay').style.display = 'flex';
     document.querySelector('.app-wrapper').style.display = 'none';
+
+    // Adicionar evento ao botão de login
+    const loginButton = document.getElementById('login-submit');
+    if (loginButton) {
+        loginButton.addEventListener('click', function() {
+            submitForm('login');
+        });
+    } else {
+        console.error('Botão login-submit não encontrado.');
+    }
 });
 
 function waitForGoogleScript(callback, timeout = 20000, interval = 500) {
@@ -152,4 +162,54 @@ function initializeChatbot() {
         }
 
         messageElement.appendChild(avatar);
-        messageElement _
+        messageElement.appendChild(messageContent);
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendFeedback(tipo, sourceRow, question) {
+        waitForGoogleScript(() => {
+            const payload = {
+                action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
+                question: question,
+                sourceRow: sourceRow,
+                email: localStorage.getItem('userEmail'),
+                nome: localStorage.getItem('userNome')
+            };
+
+            console.log('Enviando feedback:', payload);
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    console.log('Feedback registrado:', response);
+                    appendMessage('bot', 'Feedback registrado. Obrigado!');
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Erro no envio do feedback:', error);
+                    appendMessage('bot', 'Erro ao registrar feedback: ' + error.message);
+                })
+                .processForm(payload);
+        });
+    }
+}
+
+document.getElementById('expandable-faq-header').addEventListener('click', function() {
+    const moreQuestions = document.getElementById('more-questions');
+    const arrow = this.querySelector('.arrow');
+    moreQuestions.classList.toggle('hidden-questions');
+    arrow.textContent = moreQuestions.classList.contains('hidden-questions') ? '▶' : '▼';
+});
+
+document.getElementById('theme-switcher').addEventListener('click', function() {
+    document.body.classList.toggle('dark-theme');
+    this.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
+});
+
+document.getElementById('question-search').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const questionItems = document.querySelectorAll('#quick-questions-list li, .more-questions-list li');
+    questionItems.forEach(item => {
+        const question = item.getAttribute('data-question').toLowerCase();
+        item.style.display = question.includes(searchTerm) ? '' : 'none';
+    });
+});
