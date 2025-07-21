@@ -1,3 +1,9 @@
+// Inicializa a interface: mostra o overlay e esconde o painel
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('identificacao-overlay').style.display = 'flex';
+    document.querySelector('.app-wrapper').style.display = 'none';
+});
+
 // Função para enviar o formulário de login ou registro
 function submitForm(action) {
     const email = document.getElementById('email-input').value;
@@ -24,10 +30,10 @@ function submitForm(action) {
             if (response.status === 'sucesso') {
                 errorMessage.style.display = 'none';
                 document.getElementById('identificacao-overlay').style.display = 'none';
-                document.querySelector('.app-wrapper').style.display = 'block';
+                document.querySelector('.app-wrapper').style.display = 'grid';
                 // Armazenar o e-mail para uso no chatbot
                 localStorage.setItem('userEmail', email);
-                // Inicializar o chatbot (se necessário)
+                // Inicializar o chatbot
                 initializeChatbot();
             } else {
                 errorMessage.style.display = 'block';
@@ -41,7 +47,7 @@ function submitForm(action) {
         .processForm(payload);
 }
 
-// Função para inicializar o chatbot (adapte conforme sua lógica atual)
+// Função para inicializar o chatbot
 function initializeChatbot() {
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
@@ -90,18 +96,44 @@ function initializeChatbot() {
     // Função para adicionar mensagens ao chat
     function appendMessage(sender, message, sourceRow) {
         const messageElement = document.createElement('div');
-        messageElement.classList.add('message', sender);
-        messageElement.innerHTML = message;
+        messageElement.classList.add('message-container', sender);
+        
+        const avatar = document.createElement('div');
+        avatar.classList.add('avatar', sender);
+        avatar.textContent = sender === 'user' ? '👤' : '🤖';
+        
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+        
+        const messageText = document.createElement('div');
+        messageText.classList.add('message');
+        messageText.innerHTML = message;
+
+        messageContent.appendChild(messageText);
 
         if (sender === 'bot' && sourceRow) {
-            const feedbackButtons = `
-                <div class="feedback-buttons">
-                    <button onclick="sendFeedback('positivo', '${sourceRow}', '${message}')">👍</button>
-                    <button onclick="sendFeedback('negativo', '${sourceRow}', '${message}')">👎</button>
-                </div>`;
-            messageElement.innerHTML += feedbackButtons;
+            const copyBtn = document.createElement('button');
+            copyBtn.classList.add('copy-btn');
+            copyBtn.innerHTML = '📋';
+            copyBtn.onclick = function() {
+                navigator.clipboard.writeText(message).then(() => {
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => copyBtn.classList.remove('copied'), 1000);
+                });
+            };
+            messageElement.appendChild(copyBtn);
+
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.classList.add('feedback-container');
+            feedbackContainer.innerHTML = `
+                <button class="feedback-btn positive" onclick="sendFeedback('positivo', '${sourceRow}', '${message.replace(/'/g, "\\'")}')">👍</button>
+                <button class="feedback-btn negative" onclick="sendFeedback('negativo', '${sourceRow}', '${message.replace(/'/g, "\\'")}')">👎</button>
+            `;
+            messageContent.appendChild(feedbackContainer);
         }
 
+        messageElement.appendChild(avatar);
+        messageElement.appendChild(messageContent);
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
     }
@@ -134,13 +166,13 @@ document.getElementById('expandable-faq-header').addEventListener('click', funct
     arrow.textContent = moreQuestions.classList.contains('hidden-questions') ? '▶' : '▼';
 });
 
-// Inicializar o tema (adapte conforme seu código atual)
+// Inicializar o tema
 document.getElementById('theme-switcher').addEventListener('click', function() {
     document.body.classList.toggle('dark-theme');
     this.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
 });
 
-// Inicializar a busca de perguntas (adapte conforme necessário)
+// Inicializar a busca de perguntas
 document.getElementById('question-search').addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase();
     const questionItems = document.querySelectorAll('#quick-questions-list li, .more-questions-list li');
