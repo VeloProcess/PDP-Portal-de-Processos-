@@ -10,7 +10,7 @@
     --cor-azul-claro: #a7d9ee;
     --cor-azul-medio: #007BFF;
     --cor-azul-escuro: #0056b3;
-    --cor-azul-vibrante: #007BFF; /* Adicionada para consistência */
+    --cor-azul-vibrante: #007BFF;
     --cor-balao-bot: #D6E4FF;
     --cor-sombra: rgba(0, 0, 0, 0.1);
     --cor-texto-link: #1a73e8;
@@ -89,10 +89,10 @@ body {
     height: 95vh;
     gap: var(--espaco-md);
     transition: var(--transicao-normal);
-    visibility: hidden; /* Começa invisível, JS controla a visibilidade */
+    display: none; /* Começa escondido, JS controla a exibição */
 }
 
-/* --- 🖊️ ESTILOS DO FORMULÁRIO DE IDENTIFICAÇÃO (antigos inline) --- */
+/* --- 🖊️ ESTILOS DO FORMULÁRIO DE IDENTIFICAÇÃO --- */
 #identificacao-overlay {
     position: fixed;
     top: 0;
@@ -100,7 +100,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 50, 100, 0.85);
-    display: none; /* JS controla a exibição */
+    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -112,7 +112,7 @@ body {
     background: var(--cor-container);
     padding: var(--espaco-xl);
     border-radius: var(--borda-raio);
-    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
     text-align: center;
     width: 90%;
     max-width: 450px;
@@ -141,9 +141,8 @@ body {
     color: var(--cor-texto-principal);
 }
 
-#identificacao-submit {
+#identificacao-form button {
     padding: 12px 20px;
-    width: 100%;
     font-size: 16px;
     font-weight: bold;
     border: none;
@@ -151,20 +150,19 @@ body {
     color: white;
     border-radius: 8px;
     cursor: pointer;
-    margin-top: 10px;
+    margin: 5px;
     transition: background-color var(--transicao-rapida);
 }
-#identificacao-submit:hover {
+
+#identificacao-form button:hover {
     background-color: var(--cor-azul-escuro);
 }
-
 
 #identificacao-error {
     display: none;
     color: var(--cor-erro);
     margin-top: 15px;
 }
-
 
 /* --- 🖼️ PAINÉIS (Sidebar, Chat, Notícias) --- */
 .panel {
@@ -740,6 +738,6 @@ body {
         height: 36px;
     }
     .message-container:hover .copy-btn {
-        right: 8px; /* Ajuste para telas menores */
+        right: 8px;
     }
 }
