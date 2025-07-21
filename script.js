@@ -1,260 +1,385 @@
-const BACKEND_URL = 'http://127.0.0.1:3000';
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('identificacao-overlay').style.display = 'flex';
+    document.querySelector('.app-wrapper').style.display = 'none';
+});
 
-document.addEventListener('DOMContentLoaded', () => {
-    const identificacaoOverlay = document.getElementById('identificacao-overlay');
-    const identificacaoForm = document.getElementById('identificacao-form');
-    const identificacaoError = document.getElementById('identificacao-error');
-    const appWrapper = document.querySelector('.app-wrapper');
+function waitForGoogleScript(callback, timeout = 20000, interval = 500) {
+    const startTime = Date.now();
+    function check() {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            console.log('Biblioteca do Google Apps Script carregada com sucesso.');
+            callback();
+        } else if (Date.now() - startTime < timeout) {
+            console.warn('Biblioteca do Google Apps Script ainda não carregada. Aguardando...');
+            setTimeout(check, interval);
+        } else {
+            console.error('Erro: Biblioteca do Google Apps Script não carregada após o tempo limite. Verifique a URL do script e a conexão de rede.');
+            const errorMessage = document.getElementById('identificacao-error');
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = 'Erro: Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
+        }
+    }
+    check();
+}
+
+function submitForm(action) {
+    const errorMessage = document.getElementById('identificacao-error');
+    const nome = document.getElementById('nome-input').value.trim();
+    const email = document.getElementById('email-input').value.trim();
+
+    if (!nome) {
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'Por favor, insira seu nome.';
+        return;
+    }
+
+    if (!email.endsWith('@velotax.com.br')) {
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
+        return;
+    }
+
+    waitForGoogleScript(() => {
+        const payload = { action, nome, email };
+        console.log('Enviando payload para o Apps Script:', payload);
+
+        google.script.run
+            .withSuccessHandler(function(response) {
+                console.log('Resposta do Apps Script:', response);
+                if (response.status === 'sucesso') {
+                    errorMessage.style.display = 'none';
+                    document.getElementById('identificacao-overlay').style.display = 'none';
+                    document.querySelector('.app-wrapper').style.display = 'grid';
+                    localStorage.setItem('userNome', nome);
+                    localStorage.setItem('userEmail', email);
+                    initializeChatbot();
+                } else {
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = response.mensagem;
+                }
+            })
+            .withFailureHandler(function(error) {
+                console.error('Erro no google.script.run:', error);
+                errorMessage.style.display = 'block';
+                errorMessage.textContent = 'Erro ao processar: ' + error.message;
+            })
+            .processForm(payload);
+    });
+}
+
+function initializeChatbot() {
+    console.log('Inicializando chatbot...');
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
-    const themeSwitcher = document.getElementById('theme-switcher');
-    const questionSearch = document.getElementById('question-search');
-    const quickQuestionsList = document.getElementById('quick-questions-list');
-    const moreQuestions = document.getElementById('more-questions');
-    const expandableFaqHeader = document.getElementById('expandable-faq-header');
-    const noticiasContent = document.getElementById('noticias-content');
+    const questionItems = document.querySelectorAll('#quick-questions-list li, .more-questions-list li');
 
-    appWrapper.style.visibility = 'visible';
-
-    window.openTab = function(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.style.display = 'none';
-            tab.classList.remove('active');
-        });
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.classList.remove('active');
-        });
-        const selectedTab = document.getElementById(tabName);
-        selectedTab.style.display = 'block';
-        selectedTab.classList.add('active');
-        document.querySelector(`button[onclick="openTab('${tabName}')"]`).classList.add('active');
-
-        if (tabName === 'noticias') {
-            carregarNoticias();
-        }
-    };
-
-    identificacaoForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const nome = document.getElementById('nome-input').value;
-        const email = document.getElementById('email-input').value;
-        const defaultPassword = 'default123';
-
-        if (!email.endsWith('@velotax.com.br')) {
-            identificacaoError.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-            identificacaoError.style.display = 'block';
-            return;
-        }
-
-        try {
-            console.log('Tentando login para:', email);
-            let response = await fetch(`${BACKEND_URL}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, senha: defaultPassword })
-            });
-            let data = await response.json();
-
-            if (data.status === 'sucesso') {
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('userName', nome);
-                identificacaoOverlay.style.display = 'none';
-                appWrapper.style.display = 'block';
-                openTab('chat');
-                console.log('Login bem-sucedido, interface exibida');
-            } else {
-                console.log('Login falhou, tentando registrar:', data.mensagem);
-                response = await fetch(`${BACKEND_URL}/api/registrar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, senha: defaultPassword })
-                });
-                data = await response.json();
-
-                if (data.status === 'sucesso') {
-                    localStorage.setItem('userEmail', email);
-                    localStorage.setItem('userName', nome);
-                    identificacaoOverlay.style.display = 'none';
-                    appWrapper.style.display = 'block';
-                    openTab('chat');
-                    console.log('Registro bem-sucedido, interface exibida');
-                } else {
-                    identificacaoError.textContent = data.mensagem || 'Erro ao registrar usuário.';
-                    identificacaoError.style.display = 'block';
-                    console.error('Erro ao registrar:', data.mensagem);
-                }
-            }
-        } catch (error) {
-            identificacaoError.textContent = 'Erro ao conectar com o servidor. Verifique se ele está rodando em http://127.0.0.1:3000.';
-            identificacaoError.style.display = 'block';
-            console.error('Erro ao fazer login/registro:', error.message, error.stack);
-        }
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
     });
 
-    async function carregarNoticias() {
-        noticiasContent.innerHTML = '<p>Carregando notícias...</p>';
-        try {
-            console.log('Carregando notícias de:', `${BACKEND_URL}/api/noticias`);
-            const response = await fetch(`${BACKEND_URL}/api/noticias`, { signal: AbortSignal.timeout(5000) });
-            const data = await response.json();
-            console.log('Resposta da API de notícias:', data);
-            if (data.status === 'ok' && data.noticias.length > 0) {
-                noticiasContent.innerHTML = data.noticias.map(noticia => {
-                    let alertClass = '';
-                    if (noticia.titulo.toLowerCase().includes('crítico') || noticia.titulo.toLowerCase().includes('urgente')) {
-                        alertClass = 'critical-alert';
-                    } else if (noticia.titulo.toLowerCase().includes('aviso') || noticia.titulo.toLowerCase().includes('alerta')) {
-                        alertClass = 'warning-alert';
-                    } else {
-                        alertClass = 'info-alert';
-                    }
-                    return `
-                        <div class="news-item ${alertClass}">
-                            <h3>${noticia.titulo}</h3>
-                            <small>${noticia.data}</small>
-                            <p>${noticia.conteudo}</p>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                noticiasContent.innerHTML = '<p class="error">Nenhuma notícia disponível. Verifique a planilha ou a conexão com o servidor.</p>';
-                console.warn('Nenhuma notícia retornada pela API');
-            }
-        } catch (error) {
-            noticiasContent.innerHTML = '<p class="error">Erro ao conectar com o servidor. Verifique se ele está rodando em http://127.0.0.1:3000.</p>';
-            console.error('Erro ao carregar notícias:', error.message, error.stack);
-        }
-    }
+    questionItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const question = this.getAttribute('data-question');
+            userInput.value = question;
+            sendMessage();
+        });
+    });
 
-    sendButton.addEventListener('click', async () => {
-        const pergunta = userInput.value.trim();
-        const email = localStorage.getItem('userEmail');
-        if (!pergunta) return;
+    function sendMessage() {
+        const question = userInput.value.trim();
+        if (!question) return;
 
-        const userMessage = document.createElement('div');
-        userMessage.className = 'message-container user';
-        userMessage.innerHTML = `
-            <div class="avatar user">U</div>
-            <div class="message-content">
-                <div class="message">${pergunta}</div>
-            </div>
-        `;
-        chatBox.appendChild(userMessage);
-
-        try {
-            console.log('Enviando pergunta:', pergunta);
-            const response = await fetch(`${BACKEND_URL}/api/perguntar?pergunta=${encodeURIComponent(pergunta)}&email=${encodeURIComponent(email)}`);
-            const data = await response.json();
-            console.log('Resposta da API de pergunta:', data);
-            const botMessage = document.createElement('div');
-            botMessage.className = 'message-container bot';
-            botMessage.innerHTML = `
-                <div class="avatar bot">B</div>
-                <div class="message-content">
-                    <div class="message">${data.resposta}</div>
-                    ${data.sourceRow ? `
-                    <div class="feedback-container">
-                        <button class="feedback-btn positive" onclick="enviarFeedback('logFeedbackPositivo', '${encodeURIComponent(pergunta)}', ${data.sourceRow})">👍</button>
-                        <button class="feedback-btn negative" onclick="enviarFeedback('logFeedbackNegativo', '${encodeURIComponent(pergunta)}', ${data.sourceRow})">👎</button>
-                    </div>
-                    <button class="copy-btn" onclick="copyToClipboard('${encodeURIComponent(data.resposta)}')">📋</button>
-                    ` : ''}
-                </div>
-            `;
-            chatBox.appendChild(botMessage);
-        } catch (error) {
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'message-container bot';
-            errorMessage.innerHTML = `
-                <div class="avatar bot">B</div>
-                <div class="message-content">
-                    <div class="message error">Erro ao obter resposta. Verifique se o servidor está rodando em http://127.0.0.1:3000.</div>
-                </div>
-            `;
-            chatBox.appendChild(errorMessage);
-            console.error('Erro ao enviar pergunta:', error.message, error.stack);
-        }
-
+        appendMessage('user', question);
         userInput.value = '';
-        chatBox.scrollTop = chatBox.scrollHeight;
-    });
 
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendButton.click();
-        }
-    });
-
-    window.copyToClipboard = function(text) {
-        const decodedText = decodeURIComponent(text);
-        navigator.clipboard.writeText(decodedText).then(() => {
-            const copyBtn = event.target;
-            copyBtn.classList.add('copied');
-            setTimeout(() => copyBtn.classList.remove('copied'), 1000);
+        waitForGoogleScript(() => {
+            console.log('Enviando pergunta:', question);
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    console.log('Resposta do chatbot:', response);
+                    if (response.status === 'sucesso') {
+                        appendMessage('bot', response.resposta, response.sourceRow);
+                    } else {
+                        appendMessage('bot', response.mensagem);
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Erro no envio da pergunta:', error);
+                    appendMessage('bot', 'Erro ao obter resposta: ' + error.message);
+                })
+                .doGet({ parameter: { pergunta: question, email: localStorage.getItem('userEmail') } });
         });
-    };
-
-    window.enviarFeedback = async (action, pergunta, sourceRow) => {
-        const email = localStorage.getItem('userEmail');
-        try {
-            console.log('Enviando feedback:', { action, pergunta, sourceRow, email });
-            const response = await fetch(`${BACKEND_URL}/api/feedback`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, question: pergunta, sourceRow, email })
-            });
-            const data = await response.json();
-            if (data.status === 'sucesso') {
-                alert('Feedback enviado com sucesso!');
-                const feedbackBtn = event.target;
-                feedbackBtn.classList.add('active');
-            } else {
-                alert('Erro ao enviar feedback.');
-            }
-        } catch (error) {
-            alert('Erro ao enviar feedback.');
-            console.error('Erro ao enviar feedback:', error.message, error.stack);
-        }
-    };
-
-    themeSwitcher.addEventListener('click', () => {
-        document.body.classList.toggle('dark-theme');
-        themeSwitcher.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
-        localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
-    });
-
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-theme');
-        themeSwitcher.textContent = '☀️';
     }
 
-    questionSearch.addEventListener('input', () => {
-        const searchTerm = questionSearch.value.toLowerCase();
-        const questions = document.querySelectorAll('#quick-questions-list li, .more-questions-list li');
-        questions.forEach(question => {
-            const text = question.textContent.toLowerCase();
-            question.style.display = text.includes(searchTerm) ? 'block' : 'none';
-        });
-    });
+    function appendMessage(sender, message, sourceRow) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message-container', sender);
+        
+        const avatar = document.createElement('div');
+        avatar.classList.add('avatar', sender);
+        avatar.textContent = sender === 'user' ? '👤' : '🤖';
+        
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+        
+        const messageText = document.createElement('div');
+        messageText.classList.add('message');
+        messageText.innerHTML = message;
 
-    quickQuestionsList.querySelectorAll('li').forEach(item => {
-        item.addEventListener('click', () => {
-            userInput.value = item.dataset.question;
-            sendButton.click();
-        });
-    });
+        messageContent.appendChild(messageText);
 
-    expandableFaqHeader.addEventListener('click', () => {
-        const isExpanded = moreQuestions.style.display === 'block';
-        moreQuestions.style.display = isExpanded ? 'none' : 'block';
-        expandableFaqHeader.classList.toggle('expanded', !isExpanded);
-    });
+        if (sender === 'bot' && sourceRow) {
+            const copyBtn = document.createElement('button');
+            copyBtn.classList.add('copy-btn');
+            copyBtn.innerHTML = '📋';
+            copyBtn.onclick = function() {
+                navigator.clipboard.writeText(message).then(() => {
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => copyBtn.classList.remove('copied'), 1000);
+                });
+            };
+            messageElement.appendChild(copyBtn);
 
-    moreQuestions.querySelectorAll('li').forEach(item => {
-        item.addEventListener('click', () => {
-            userInput.value = item.dataset.question;
-            sendButton.click();
-        });
-    });
-});
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.classList.add('feedback-container');
+            feedbackContainer.innerHTML = `
+                <button class="feedback-btn positive" onclick="sendFeedback('positivo', '${sourceRow}', '${message.replace(/'/g, "\\'")}')">👍</button>
+                <button class="feedback-btn negative" onclick="sendFeedback('negativo', '${sourceRow}', '${message.replace(/'/g, "\\'")}')">👎</button>
+            `;
+            messageContent.appendChild(feedbackContainer);
+        }
+
+        messageElement.appendChild(avatar);
+        messageElement _
+
+System: Desculpe-me, mas parece que a resposta anterior foi cortada, e o artefato para `script.js` está incompleto. Vou fornecer os códigos completos e funcionais para `style.css`, `script.js` e `index.html`, garantindo que estejam separados, conforme solicitado. Esses códigos são baseados na versão simplificada com login por nome e e-mail `@velotax.com.br`, usando `google.script.run` para evitar problemas de CORS e resolver o erro de timeout ("Biblioteca do Google Apps Script não carregada"). O `Code.gs` (artefato `5b751676-8797-414c-8ff8-286394adbcb4`, versão `b36e65d7-0acc-49a6-84d8-c26ae079ee06`) já foi fornecido e deve ser usado no backend. Você precisará reimplantar o Apps Script e atualizar a URL no `index.html`.
+
+---
+
+### 1. `style.css`
+<xaiArtifact artifact_id="72cec25f-b3b9-4c8c-b949-43080c0b2cd9" artifact_version_id="71f8a50a-2272-4d48-883f-ae080a75915c" title="style.css" contentType="text/css">
+#identificacao-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+#identificacao-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+#identificacao-error {
+    color: red;
+    display: none;
+    margin-top: 10px;
+}
+
+.app-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+#sidebar {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+#question-search {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#quick-questions-list, #more-questions {
+    list-style: none;
+    padding: 0;
+}
+
+#quick-questions-list li, #more-questions li {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
+}
+
+#quick-questions-list li:hover, #more-questions li:hover {
+    background: #e9ecef;
+}
+
+#expandable-faq-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hidden-questions {
+    display: none;
+}
+
+#theme-switcher {
+    margin-top: 10px;
+}
+
+#chat-box {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+#input-container {
+    display: flex;
+    margin-top: 10px;
+}
+
+#user-input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+}
+
+#send-button {
+    border-radius: 0 4px 4px 0;
+}
+
+.message-container {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message-container.user {
+    justify-content: flex-end;
+}
+
+.avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 30px;
+    margin: 0 10px;
+}
+
+.user .avatar {
+    background: #007bff;
+    color: white;
+}
+
+.bot .avatar {
+    background: #28a745;
+    color: white;
+}
+
+.message-content {
+    max-width: 70%;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 8px;
+    background: #f1f1f1;
+}
+
+.user .message {
+    background: #007bff;
+    color: white;
+}
+
+.copy-btn {
+    margin-left: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.copy-btn.copied::after {
+    content: 'Copiado!';
+    color: green;
+    font-size: 12px;
+    position: absolute;
+}
+
+.feedback-container {
+    margin-top: 5px;
+}
+
+.feedback-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin: 0 5px;
+}
+
+body.dark-theme {
+    background: #343a40;
+    color: #f8f9fa;
+}
+
+body.dark-theme #identificacao-box {
+    background: #495057;
+    color: #f8f9fa;
+}
+
+body.dark-theme #sidebar {
+    background: #495057;
+}
+
+body.dark-theme .message {
+    background: #495057;
+}
+
+body.dark-theme .user .message {
+    background: #0056b3;
+}
