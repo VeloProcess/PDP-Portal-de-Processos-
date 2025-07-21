@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDP - Portal de Processos</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://script.google.com;">
+    <title>Painel Interno com ChatBot</title>
+    <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,42 +14,70 @@
             <h2>Bem-vindo(a) ao Painel</h2>
             <p>Por favor, identifique-se para continuar.</p>
             <form id="identificacao-form">
-                <div class="input-group">
-                    <label for="nome-input">Nome:</label>
-                    <input type="text" id="nome-input" required>
+                <div class="input-group" style="text-align: left; margin-bottom: 15px;">
+                    <label for="nome-input" style="display: block; margin-bottom: 5px; font-weight: bold;">Nome Completo</label>
+                    <input type="text" id="nome-input" required style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
                 </div>
-                <div class="input-group">
-                    <label for="email-input">E-mail Corporativo:</label>
-                    <input type="email" id="email-input" required>
+                <div class="input-group" style="text-align: left; margin-bottom: 15px;">
+                    <label for="email-input" style="display: block; margin-bottom: 5px; font-weight: bold;">E-mail Corporativo</label>
+                    <input type="email" id="email-input" required style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
                 </div>
-                <button type="button" id="login-submit" onclick="submitForm('login')">Entrar</button>
+                <button type="submit" id="identificacao-submit" style="padding: 12px 20px; width: 100%; font-size: 16px; font-weight: bold; border: none; background-color: var(--cor-azul-medio); color: white; border-radius: 8px; cursor: pointer; margin-top: 10px;">Entrar</button>
             </form>
-            <p id="identificacao-error"></p>
+            <p id="identificacao-error" style="display:none; color: #ff4d4d; margin-top: 15px;">Acesso permitido apenas para e-mails @velotax.com.br!</p>
         </div>
     </div>
-    <div class="app-wrapper" style="display: none;">
-        <div id="sidebar">
-            <input type="text" id="question-search" placeholder="Pesquisar perguntas...">
-            <h3>Perguntas Rápidas</h3>
-            <ul id="quick-questions-list">
-                <li data-question="O que é Velotax?">O que é Velotax?</li>
-                <li data-question="O que é antecipação?">O que é antecipação?</li>
-            </ul>
-            <h3 id="expandable-faq-header">Mais Perguntas <span class="arrow">▶</span></h3>
-            <ul id="more-questions" class="hidden-questions">
-                <li data-question="Qual é a hora atual?">Qual é a hora atual?</li>
-            </ul>
-            <button id="theme-switcher">🌙</button>
+    <div id="alert-overlay" class="hidden">
+        <div id="alert-box">
+            <h2>⚠️ Comunicado Importante ⚠️</h2>
+            <div id="alert-content"></div>
+            <button id="alert-close-btn">Eu li e estou Ciente</button>
         </div>
-        <div id="chat-container">
-            <div id="chat-box"></div>
-            <div id="input-container">
-                <input type="text" id="user-input" placeholder="Digite sua pergunta...">
-                <button id="send-button">Enviar</button>
+    </div>
+    <div class="app-wrapper">
+        <div id="sidebar" class="panel">
+            <div class="panel-header"><h2>Perguntas Frequentes</h2></div>
+            <ul id="quick-questions-list">
+                <li>Como funciona a portabilidade?</li>
+                <li>Quero fazer a exclusão da minha conta</li>
+                <li>Problema no login do app</li>
+                <li>Informação sobre os valores da restituição</li>
+            </ul>
+            <br><h4>Clique na prancheta 📋 ao lado da resposta do bot para copiar...</h4><br><br>
+            <strong>Vale lembrar que, as informações presentes aqui, são de uso interno...</strong>
+        </div>
+        <div class="chat-container panel">
+            <div class="panel-header">
+                <h2 style="text-align: center; flex-grow: 1;">Assistente Virtual</h2>
+                <button id="theme-switcher" title="Alterar tema">☀️</button>
+            </div>
+            <div class="chat-box" id="chat-box"></div>
+            <div id="quick-actions-container">
+                <h3>Ações Rápidas</h3>
+                <div class="quick-actions-grid">
+                    <button class="quick-action">📲Portabilidade</button>
+                    <button class="quick-action">💰Juros</button>
+                    <button class="quick-action">🔐Retenção da chave pix</button>
+                    <button class="quick-action">✂Desconto proporcional</button>
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Digite sua pergunta aqui...">
+            </div>
+        </div>
+        <div id="news-panel" class="panel">
+            <div class="panel-header"><h2>Notícias da Semana</h2></div>
+            <div id="news-list">
+                <div class="news-item critical-alert">
+                    <h2>Desligamos a Antecipação novamente, pessoal</h2>
+                    <small>Publicado em: 03/07/2025</small>
+                    <p>Devemos encaminhar ao N2 100% dos casos em que o cliente solicita a chave PIX antes de quitar o pagamento, mesmo explicando a regra contratual. Não retemos chaves contra a vontade do cliente.
+Reclamações no Bacen por falhas nesse processo são inaceitáveis.
+Se o cliente já pagou ou não contratou, resolvemos internamente (sem N2). Dificuldades na portabilidade exigem suporte passo a passo ou acionar a equipe de Produtos para exclusão, se necessário, mais informações detalhadas estão no grupo de notícias!!               
+                </div>
             </div>
         </div>
     </div>
-    <script src="https://script.google.com/macros/s/AKfycbwi1iXf8Yf96S79YjKWrEw5PIpyiot-4Qk6WhAUb98J80oybKhFw5yomsPI7UfujmE/exec"></script>
-    <script src="script.js" defer></script>
+    <script src="script.js"></script>
 </body>
 </html>
