@@ -3,56 +3,43 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('.app-wrapper').style.display = 'none';
 });
 
-// Função para verificar se a biblioteca do Google Apps Script está carregada
-function waitForGoogleScript(callback) {
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-        callback();
-    } else {
-        console.warn('Biblioteca do Google Apps Script ainda não carregada. Aguardando...');
-        setTimeout(() => waitForGoogleScript(callback), 500);
-    }
-}
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzt1HEcuB5I9AqmxvYW_API_XassgEvsjZ2UO_l9-8V7hF0q8EAvMVkhMcQwR7wBYx4/exec';
 
 // Função para enviar o formulário de login ou registro
 function submitForm(action) {
+    const email = document.getElementById('email-input').value;
+    const password = document.getElementById('password-input').value;
     const errorMessage = document.getElementById('identificacao-error');
-    waitForGoogleScript(() => {
-        const email = document.getElementById('email-input').value;
-        const password = document.getElementById('password-input').value;
 
-        // Validação do e-mail corporativo
-        if (!email.endsWith('@velotax.com.br')) {
+    if (!email.endsWith('@velotax.com.br')) {
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
+        return;
+    }
+
+    const payload = { action, email, senha: password };
+
+    fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'sucesso') {
+            errorMessage.style.display = 'none';
+            document.getElementById('identificacao-overlay').style.display = 'none';
+            document.querySelector('.app-wrapper').style.display = 'grid';
+            localStorage.setItem('userEmail', email);
+            initializeChatbot();
+        } else {
             errorMessage.style.display = 'block';
-            errorMessage.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-            return;
+            errorMessage.textContent = data.mensagem;
         }
-
-        // Preparar os dados para enviar ao Apps Script
-        const payload = {
-            action: action,
-            email: email,
-            senha: password
-        };
-
-        // Enviar a requisição ao Apps Script
-        google.script.run
-            .withSuccessHandler(function(response) {
-                if (response.status === 'sucesso') {
-                    errorMessage.style.display = 'none';
-                    document.getElementById('identificacao-overlay').style.display = 'none';
-                    document.querySelector('.app-wrapper').style.display = 'grid';
-                    localStorage.setItem('userEmail', email);
-                    initializeChatbot();
-                } else {
-                    errorMessage.style.display = 'block';
-                    errorMessage.textContent = response.mensagem;
-                }
-            })
-            .withFailureHandler(function(error) {
-                errorMessage.style.display = 'block';
-                errorMessage.textContent = 'Erro ao processar: ' + error.message;
-            })
-            .processForm(payload);
+    })
+    .catch(error => {
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = 'Erro ao processar: ' + error.message;
     });
 }
 
@@ -63,13 +50,11 @@ function initializeChatbot() {
     const sendButton = document.getElementById('send-button');
     const questionItems = document.querySelectorAll('#quick-questions-list li, .more-questions-list li');
 
-    // Adicionar evento de envio de mensagem
     sendButton.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') sendMessage();
     });
 
-    // Adicionar eventos às perguntas frequentes
     questionItems.forEach(item => {
         item.addEventListener('click', function() {
             const question = this.getAttribute('data-question');
@@ -78,33 +63,29 @@ function initializeChatbot() {
         });
     });
 
-    // Função para enviar mensagem ao Apps Script
     function sendMessage() {
         const question = userInput.value.trim();
         if (!question) return;
 
-        // Exibir a pergunta do usuário no chat
         appendMessage('user', question);
         userInput.value = '';
 
-        waitForGoogleScript(() => {
-            // Enviar a pergunta ao Apps Script
-            google.script.run
-                .withSuccessHandler(function(response) {
-                    if (response.status === 'sucesso') {
-                        appendMessage('bot', response.resposta, response.sourceRow);
-                    } else {
-                        appendMessage('bot', response.mensagem);
-                    }
-                })
-                .withFailureHandler(function(error) {
-                    appendMessage('bot', 'Erro ao obter resposta: ' + error.message);
-                })
-                .doGet({ parameter: { pergunta: question, email: localStorage.getItem('userEmail') } });
+        fetch(`${APPS_SCRIPT_URL}?pergunta=${encodeURIComponent(question)}&email=${encodeURIComponent(localStorage.getItem('userEmail'))}`, {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'sucesso') {
+                appendMessage('bot', data.resposta, data.sourceRow);
+            } else {
+                appendMessage('bot', data.mensagem);
+            }
+        })
+        .catch(error => {
+            appendMessage('bot', 'Erro ao obter resposta: ' + error.message);
         });
     }
 
-    // Função para adicionar mensagens ao chat
     function appendMessage(sender, message, sourceRow) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message-container', sender);
@@ -149,29 +130,29 @@ function initializeChatbot() {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Função para enviar feedback
     function sendFeedback(tipo, sourceRow, question) {
-        waitForGoogleScript(() => {
-            const payload = {
-                action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
-                question: question,
-                sourceRow: sourceRow,
-                email: localStorage.getItem('userEmail')
-            };
+        const payload = {
+            action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
+            question: question,
+            sourceRow: sourceRow,
+            email: localStorage.getItem('userEmail')
+        };
 
-            google.script.run
-                .withSuccessHandler(function(response) {
-                    appendMessage('bot', 'Feedback registrado. Obrigado!');
-                })
-                .withFailureHandler(function(error) {
-                    appendMessage('bot', 'Erro ao registrar feedback: ' + error.message);
-                })
-                .processForm(payload);
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            appendMessage('bot', 'Feedback registrado. Obrigado!');
+        })
+        .catch(error => {
+            appendMessage('bot', 'Erro ao registrar feedback: ' + error.message);
         });
     }
 }
 
-// Função para expandir/recolher perguntas frequentes
 document.getElementById('expandable-faq-header').addEventListener('click', function() {
     const moreQuestions = document.getElementById('more-questions');
     const arrow = this.querySelector('.arrow');
@@ -179,13 +160,11 @@ document.getElementById('expandable-faq-header').addEventListener('click', funct
     arrow.textContent = moreQuestions.classList.contains('hidden-questions') ? '▶' : '▼';
 });
 
-// Inicializar o tema
 document.getElementById('theme-switcher').addEventListener('click', function() {
     document.body.classList.toggle('dark-theme');
     this.textContent = document.body.classList.contains('dark-theme') ? '☀️' : '🌙';
 });
 
-// Inicializar a busca de perguntas
 document.getElementById('question-search').addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase();
     const questionItems = document.querySelectorAll('#quick-questions-list li, .more-questions-list li');
