@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let ultimaLinhaDaFonte = null;
         let isTyping = false;
         
-        const BACKEND_URL = "https://script.google.com/macros/s/AKfycbx0u-3qCjA-sVmkOSPDJSf4R2OKRnLxAb0j_gPQ_RaNLN8DzrMj9ZgFQWsUe8diN2grFg/exec";
+        const BACKEND_URL = "https://script.google.com/macros/s/AKfycbw8n95lQr5-RbxG9qYG7O_3ZEOVkVQ3K50C3iFM9JViLyEsa8hiDuRuCzlgy_YPoI43/exec";
 
         async function copiarTextoParaClipboard(texto) {
             try {
