@@ -3,125 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://script.google.com https://accounts.google.com">
+    
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://script.google.com https://accounts.google.com;">
     <meta http-equiv="Permissions-Policy" content="identity-credentials-get=()">
-    <title>Painel Interno com ChatBot - Tema Clássico</title>
+
+    <title>Painel Interno com ChatBot - Velo Process</title>
     <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
+    
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* CSS inline temporário */
-        :root {
-            --cor-fundo: #f0f4f8;
-            --cor-container: #ffffff;
-            --cor-caixa-chat: #eaf2ff;
-            --cor-texto-principal: #333;
-            --cor-borda: #d1e3f0;
-            --cor-azul-claro: #a7d9ee;
-            --cor-azul-medio: #007BFF;
-            --cor-azul-escuro: #0056b3;
-            --cor-balao-bot: #D6E4FF;
-            --cor-sombra: rgba(0, 0, 0, 0.1);
-            --cor-texto-link: #1a73e8;
-            --cor-foco: #4d90fe;
-            --cor-sucesso: #4CAF50;
-            --cor-erro: #f44336;
-            --cor-alerta: #FF9800;
-            --cor-info: #2196F3;
-            --espaco-xs: 4px;
-            --espaco-sm: 8px;
-            --espaco-md: 16px;
-            --espaco-lg: 24px;
-            --espaco-xl: 32px;
-            --borda-raio: 12px;
-            --borda-raio-sm: 6px;
-            --avatar-size: 36px;
-            --transicao-rapida: 0.2s ease;
-            --transicao-normal: 0.3s ease;
-            --transicao-lenta: 0.5s ease;
-        }
-        body.dark-theme {
-            --cor-fundo: #121212;
-            --cor-container: #1e1e1e;
-            --cor-caixa-chat: #2a2a2a;
-            --cor-texto-principal: #e0e0e0;
-            --cor-borda: #334a5f;
-            --cor-azul-claro: #334a5f;
-            --cor-azul-medio: #3a9bff;
-            --cor-azul-escuro: #87c3ff;
-            --cor-balao-bot: #2c3e50;
-            --cor-sombra: rgba(255, 255, 255, 0.05);
-            --cor-texto-link: #8ab4f8;
-            --cor-foco: #5e97f6;
-            --cor-sucesso: #2e7d32;
-            --cor-erro: #c62828;
-            --cor-alerta: #FFA000;
-            --cor-info: #1976D2;
-        }
-        body {
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            background: var(--cor-fundo);
-            color: var(--cor-texto-principal);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: var(--espaco-md);
-            box-sizing: border-box;
-            transition: background-color var(--transicao-normal), color var(--transicao-normal);
-            background-image: url('https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed.png?raw=true');
-            background-size: cover;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-        #login-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100%;
-            text-align: center;
-            background-color: rgba(0, 50, 100, 0.85);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-        }
-        .app-wrapper.hidden {
-            display: none;
-        }
-        /* ... resto do CSS do style.css ... */
-    </style>
+
     <script>
         function handleCredentialResponse(response) {
-            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
-            const dadosAtendente = {
-                nome: userObject.name,
-                email: userObject.email,
-                foto: userObject.picture,
-                timestamp: Date.now()
-            };
-            const DOMINIO_PERMITIDO = "@velotax.com.br";
-            if (!dadosAtendente.email.endsWith(DOMINIO_PERMITIDO)) {
-                alert("Acesso negado. Por favor, use uma conta Google com o domínio " + DOMINIO_PERMITIDO);
-                return;
+            try {
+                const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+                const dadosAtendente = {
+                    nome: userObject.name,
+                    email: userObject.email,
+                    foto: userObject.picture,
+                    timestamp: Date.now()
+                };
+
+                const DOMINIO_PERMITIDO = "@velotax.com.br";
+                if (!dadosAtendente.email.endsWith(DOMINIO_PERMITIDO)) {
+                    alert("Acesso negado. Por favor, use uma conta Google com o domínio " + DOMINIO_PERMITIDO);
+                    return;
+                }
+
+                // Salva os dados no localStorage e exibe o painel
+                localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+                document.getElementById('login-screen').style.display = 'none';
+                document.querySelector('.app-wrapper').classList.remove('hidden');
+                
+                // Chama a função para iniciar o bot (definida em script.js)
+                iniciarBot(dadosAtendente);
+            } catch (error) {
+                console.error("Erro ao processar o login do Google:", error);
+                alert("Ocorreu um erro ao tentar fazer o login. Verifique o console para mais detalhes.");
             }
-            localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
-            document.getElementById('login-screen').style.display = 'none';
-            document.querySelector('.app-wrapper').classList.remove('hidden');
-            iniciarBot(dadosAtendente);
         }
     </script>
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+
 </head>
 <body>
+
     <div id="login-screen">
-        <div>
-            <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true" alt="Logo da Empresa" style="width: 100px; margin-bottom: 20px;">
+        <div id="identificacao-box">
+             <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true" alt="Logo da Empresa" style="width: 100px; margin-bottom: 20px;">
             <h2>Bem-vindo(a) ao Painel de Atendimento</h2>
             <p>Por favor, faça login com sua conta Google para continuar.</p>
+            
             <div id="g_id_onload"
-                 data-client_id="827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com"
+                 data-client_id="COLE_SEU_ID_DO_CLIENTE_OAUTH_AQUI"
                  data-callback="handleCredentialResponse"
                  data-auto_select="true">
             </div>
@@ -146,7 +80,6 @@
                     <span class="search-icon">🔍</span>
                     <input type="text" id="question-search" placeholder="Buscar perguntas...">
                 </div>
-                
                 <div class="question-category">Mais Comuns</div>
                 <ul id="quick-questions-list">
                     <li data-question="E-mail de procuração, o que dizer?">E-mail de procuração, o que dizer?</li>
@@ -154,7 +87,6 @@
                     <li data-question="Problema no login do app">Problema no login do app</li>
                     <li data-question="Informação sobre os valores da restituição">Informação sobre os valores da restituição</li>
                 </ul>
-
                 <div id="expandable-faq-container">
                     <div id="expandable-faq-header" class="expandable-header">
                         <span>Outras Perguntas</span>
@@ -169,19 +101,11 @@
                             <li data-question="Qual o prazo para a restituição?">Qual o prazo para a restituição?</li>
                             <li data-question="Como fazer estorno?">Como fazer estorno?</li>
                         </ul>
-                        
-                        <div class="question-category">Técnico</div>
-                        <ul id="more-questions-list">
-                            <li data-question="Portabilidade">Portabilidade</li>
-                            <li data-question="O que fazer se caí na malha fina?">O que fazer se caí na malha fina?</li>
-                            <li data-question="Como declarar investimentos?">Como declarar investimentos?</li>
-                        </ul>
                     </div>
                 </div>
-
                 <div style="margin-top: auto; padding-top: var(--espaco-md); border-top: 1px solid var(--cor-borda);">
-                    <h2><p style="font-size: 13px; color: var(--cor-azul-medio);">📋 Clique na prancheta ao lado da resposta para copiar</p></h2>
-                    <p style="font-size: 12px; margin-top: var(--espaco-sm);"><strong>Observação: As informações aqui são de uso interno.</strong> </p>
+                    <p style="font-size: 13px; color: var(--cor-azul-medio);">📋 Clique na prancheta para copiar</p>
+                    <p style="font-size: 12px; margin-top: var(--espaco-sm);"><strong>Observação: As informações aqui são de uso interno.</strong></p>
                 </div>
             </div>
         </div>
@@ -198,9 +122,7 @@
                 <button id="send-button" class="action-button" title="Enviar mensagem">
                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 0 0-.926.94l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.405Z"></path></svg>
                 </button>
-                <button class="gemini-button" onclick="window.open('https://gemini.google.com/app')" title="Obter ajuda do Gemini AI">
-                    ✦
-                </button>
+                <button class="gemini-button" onclick="window.open('https://gemini.google.com/app')" title="Obter ajuda do Gemini AI">✦</button>
             </div>
         </div>
 
@@ -212,23 +134,13 @@
                 <div class="news-item critical-alert">
                     <h2>Desligamos a Antecipação novamente, pessoal</h2>
                     <small>Publicado em: 07/07/2025</small>
-                    <p>Pessoal, para todos os clientes que entrarem em contato via chamada ou ticket, que questionar/demonstrar interesse na antecipação e/ou crédito trabalhador, por favor, registrem na planilha abaixo, pois realizaremos o envio de notificação para os mesmos. 
-🚨É importante¹ mencionar que estamos realizando os testes finais e em breve serão disponibilizados no aplicativo.
-🚨É importante² ***NÃO*** mencionar nenhum prazo aos clientes. Conforme formos avançando, informaremos à vocês. Link e planilha no grupo B2C Recados e novidades!!</p>
-                </div>
-                <div class="news-item warning-alert">
-                    <h2>Ainda sem novidades!</h2>
-                    <small></small>
-                    <p></p>
-                </div>
-                <div class="news-item info-alert">
-                    <h2>Ainda sem novidades!</h2>
-                    <small></small>
-                    <p></p>
+                    <p>Pessoal, para todos os clientes que entrarem em contato via chamada ou ticket, que questionar/demonstrar interesse na antecipação e/ou crédito trabalhador, por favor, registrem na planilha abaixo, pois realizaremos o envio de notificação para os mesmos. 🚨É importante¹ mencionar que estamos realizando os testes finais e em breve serão disponibilizados no aplicativo. 🚨É importante² ***NÃO*** mencionar nenhum prazo aos clientes. Conforme formos avançando, informaremos à vocês. Link e planilha no grupo B2C Recados e novidades!!</p>
                 </div>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
+
 </body>
 </html>
