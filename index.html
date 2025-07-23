@@ -8,7 +8,114 @@
     <title>Painel Interno com ChatBot - Tema Clássico</title>
     <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
     <link rel="stylesheet" href="style.css">
-    <!-- Função de callback do Google Sign-In no escopo global -->
+    <style>
+        /* CSS inline como solução temporária */
+        :root {
+            --cor-fundo: #f0f4f8;
+            --cor-container: #ffffff;
+            --cor-caixa-chat: #eaf2ff;
+            --cor-texto-principal: #333;
+            --cor-borda: #d1e3f0;
+            --cor-azul-claro: #a7d9ee;
+            --cor-azul-medio: #007BFF;
+            --cor-azul-escuro: #0056b3;
+            --cor-balao-bot: #D6E4FF;
+            --cor-sombra: rgba(0, 0, 0, 0.1);
+            --cor-texto-link: #1a73e8;
+            --cor-foco: #4d90fe;
+            --cor-sucesso: #4CAF50;
+            --cor-erro: #f44336;
+            --cor-alerta: #FF9800;
+            --cor-info: #2196F3;
+            --espaco-xs: 4px;
+            --espaco-sm: 8px;
+            --espaco-md: 16px;
+            --espaco-lg: 24px;
+            --espaco-xl: 32px;
+            --borda-raio: 12px;
+            --borda-raio-sm: 6px;
+            --avatar-size: 36px;
+            --transicao-rapida: 0.2s ease;
+            --transicao-normal: 0.3s ease;
+            --transicao-lenta: 0.5s ease;
+        }
+        body.dark-theme {
+            --cor-fundo: #121212;
+            --cor-container: #1e1e1e;
+            --cor-caixa-chat: #2a2a2a;
+            --cor-texto-principal: #e0e0e0;
+            --cor-borda: #334a5f;
+            --cor-azul-claro: #334a5f;
+            --cor-azul-medio: #3a9bff;
+            --cor-azul-escuro: #87c3ff;
+            --cor-balao-bot: #2c3e50;
+            --cor-sombra: rgba(255, 255, 255, 0.05);
+            --cor-texto-link: #8ab4f8;
+            --cor-foco: #5e97f6;
+            --cor-sucesso: #2e7d32;
+            --cor-erro: #c62828;
+            --cor-alerta: #FFA000;
+            --cor-info: #1976D2;
+        }
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: var(--espaco-md);
+            box-sizing: border-box;
+            transition: background-color var(--transicao-normal), color var(--transicao-normal);
+            background-image: url('https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed.png?raw=true');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(0, 50, 100, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+        .app-wrapper.hidden {
+            display: none;
+        }
+        .app-wrapper {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            width: 100%;
+            max-width: 1400px;
+            height: 95vh;
+            gap: var(--espaco-md);
+            transition: var(--transicao-normal);
+        }
+        .panel {
+            background: var(--cor-container);
+            border-radius: var(--borda-raio);
+            box-shadow: 0 4px 20px var(--cor-sombra);
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--cor-borda);
+            overflow: hidden;
+            transition: all var(--transicao-normal);
+        }
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px var(--cor-sombra);
+        }
+        /* ... resto do CSS ... (copie o restante do style.css fornecido) */
+    </style>
     <script>
         function handleCredentialResponse(response) {
             const userObject = JSON.parse(atob(response.credential.split('.')[1]));
@@ -26,7 +133,6 @@
             localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
             document.getElementById('login-screen').style.display = 'none';
             document.querySelector('.app-wrapper').classList.remove('hidden');
-            // Chama a função iniciarBot (definida em script.js)
             iniciarBot(dadosAtendente);
         }
     </script>
@@ -39,7 +145,7 @@
             <h2>Bem-vindo(a) ao Painel de Atendimento</h2>
             <p>Por favor, faça login com sua conta Google para continuar.</p>
             <div id="g_id_onload"
-                 data-client_id="827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com"
+                 data-client_id="SEU_CLIENT_ID_AQUI"
                  data-callback="handleCredentialResponse"
                  data-auto_select="true">
             </div>
