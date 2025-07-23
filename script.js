@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const identificacaoOverlay = document.getElementById('identificacao-overlay');
-    const identificacaoForm = document.getElementById('identificacao-form');
+    const loginScreen = document.getElementById('login-screen');
     const appWrapper = document.querySelector('.app-wrapper');
 
     function verificarIdentificacao() {
@@ -15,32 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (!dadosSalvos || (Date.now() - dadosSalvos.timestamp > umDiaEmMs) || !dadosSalvos.email.endsWith(DOMINIO_PERMITIDO)) {
-            identificacaoOverlay.style.display = 'flex';
-            appWrapper.style.visibility = 'hidden';
+            loginScreen.style.display = 'flex';
+            appWrapper.classList.add('hidden');
         } else {
-            identificacaoOverlay.style.display = 'none';
-            appWrapper.style.visibility = 'visible';
+            loginScreen.style.display = 'none';
+            appWrapper.classList.remove('hidden');
             iniciarBot(dadosSalvos);
         }
     }
-
-    identificacaoForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const DOMINIO_PERMITIDO = "@velotax.com.br";
-        const nome = document.getElementById('nome-input').value.trim();
-        const email = document.getElementById('email-input').value.trim().toLowerCase();
-        const errorMsg = document.getElementById('identificacao-error');
-
-        if (nome && email && email.endsWith(DOMINIO_PERMITIDO)) {
-            const dadosAtendente = { nome, email, timestamp: Date.now() };
-            localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
-            identificacaoOverlay.style.display = 'none';
-            appWrapper.style.visibility = 'visible';
-            iniciarBot(dadosAtendente);
-        } else {
-            errorMsg.style.display = 'block';
-        }
-    });
 
     function iniciarBot(dadosAtendente) {
         const chatBox = document.getElementById('chat-box');
