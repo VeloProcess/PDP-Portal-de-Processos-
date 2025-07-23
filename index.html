@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS inline como solução temporária */
+        /* CSS inline temporário */
         :root {
             --cor-fundo: #f0f4f8;
             --cor-container: #ffffff;
@@ -90,31 +90,7 @@
         .app-wrapper.hidden {
             display: none;
         }
-        .app-wrapper {
-            display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            width: 100%;
-            max-width: 1400px;
-            height: 95vh;
-            gap: var(--espaco-md);
-            transition: var(--transicao-normal);
-        }
-        .panel {
-            background: var(--cor-container);
-            border-radius: var(--borda-raio);
-            box-shadow: 0 4px 20px var(--cor-sombra);
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid var(--cor-borda);
-            overflow: hidden;
-            transition: all var(--transicao-normal);
-        }
-        .panel:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px var(--cor-sombra);
-        }
-        /* ... resto do CSS ... (copie o restante do style.css fornecido) */
+        /* ... resto do CSS do style.css ... */
     </style>
     <script>
         function handleCredentialResponse(response) {
