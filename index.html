@@ -29,13 +29,16 @@
                     return;
                 }
 
-                // Salva os dados no localStorage e exibe o painel
+                // Salva os dados no localStorage para sessões futuras
                 localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+                
+                // Esconde a tela de login e mostra o painel
                 document.getElementById('login-screen').style.display = 'none';
                 document.querySelector('.app-wrapper').classList.remove('hidden');
                 
-                // Chama a função para iniciar o bot (definida em script.js)
+                // Chama a função global para iniciar o bot (definida em script.js)
                 iniciarBot(dadosAtendente);
+
             } catch (error) {
                 console.error("Erro ao processar o login do Google:", error);
                 alert("Ocorreu um erro ao tentar fazer o login. Verifique o console para mais detalhes.");
@@ -55,7 +58,7 @@
             <p>Por favor, faça login com sua conta Google para continuar.</p>
             
             <div id="g_id_onload"
-                 data-client_id="COLE_SEU_ID_DO_CLIENTE_OAUTH_AQUI"
+                 data-client_id="827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com"
                  data-callback="handleCredentialResponse"
                  data-auto_select="true">
             </div>
