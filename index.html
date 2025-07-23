@@ -3,32 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://script.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://script.google.com https://accounts.google.com">
+    <meta http-equiv="Permissions-Policy" content="identity-credentials-get=()">
     <title>Painel Interno com ChatBot - Tema Clássico</title>
     <link rel="icon" type="image/png" href="https://github.com/velobot05/Chatbot-Atendimento/blob/main/imagens/logo.png-removebg-preview%20(1).png?raw=true">
     <link rel="stylesheet" href="style.css">
+    <!-- Função de callback do Google Sign-In no escopo global -->
+    <script>
+        function handleCredentialResponse(response) {
+            const userObject = JSON.parse(atob(response.credential.split('.')[1]));
+            const dadosAtendente = {
+                nome: userObject.name,
+                email: userObject.email,
+                foto: userObject.picture,
+                timestamp: Date.now()
+            };
+            const DOMINIO_PERMITIDO = "@velotax.com.br";
+            if (!dadosAtendente.email.endsWith(DOMINIO_PERMITIDO)) {
+                alert("Acesso negado. Por favor, use uma conta Google com o domínio " + DOMINIO_PERMITIDO);
+                return;
+            }
+            localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+            document.getElementById('login-screen').style.display = 'none';
+            document.querySelector('.app-wrapper').classList.remove('hidden');
+            // Chama a função iniciarBot (definida em script.js)
+            iniciarBot(dadosAtendente);
+        }
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <div id="identificacao-overlay">
-        <div id="identificacao-box">
-            <h2>Bem-vindo(a) ao Painel</h2>
-            <p>Por favor, identifique-se para continuar.</p>
-            <form id="identificacao-form">
-                <div class="input-group" style="text-align: left; margin-bottom: 15px;">
-                    <label for="nome-input" style="display: block; margin-bottom: 5px; font-weight: bold;">Nome: </label>
-                    <input type="text" id="nome-input" required style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
-                </div>
-                <div class="input-group" style="text-align: left; margin-bottom: 15px;">
-                    <label for="email-input" style="display: block; margin-bottom: 5px; font-weight: bold;">E-mail Corporativo: </label>
-                    <input type="email" id="email-input" required style="width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;">
-                </div>
-                <button type="submit" id="identificacao-submit" style="padding: 12px 20px; width: 100%; font-size: 16px; font-weight: bold; border: none; background-color: var(--cor-azul-vibrante); color: white; border-radius: 8px; cursor: pointer; margin-top: 10px;">Entrar</button>
-            </form>
-            <p id="identificacao-error" style="display:none; color: var(--cor-erro); margin-top: 15px;">Acesso permitido apenas para e-mails @velotax.com.br!</p>
+    <div id="login-screen">
+        <div>
+            <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true" alt="Logo da Empresa" style="width: 100px; margin-bottom: 20px;">
+            <h2>Bem-vindo(a) ao Painel de Atendimento</h2>
+            <p>Por favor, faça login com sua conta Google para continuar.</p>
+            <div id="g_id_onload"
+                 data-client_id="827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com"
+                 data-callback="handleCredentialResponse"
+                 data-auto_select="true">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-theme="outline"
+                 data-size="large"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
         </div>
     </div>
-    
-    <div class="app-wrapper">
+
+    <div class="app-wrapper hidden">
         <div id="sidebar" class="panel">
             <div class="panel-header">
                 <h2>Perguntas Frequentes</h2>
