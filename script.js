@@ -1,21 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Configurações
+    // ================== CONFIGURAÇÕES ==================
+    // ⚠️ ATENÇÃO: Verifique se esta URL é a URL da sua ÚLTIMA implantação do Google Apps Script.
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxxL5Nk7TcNcbE84DE4U6FwCYUISLUwXy_HlcENJRwAdMgfzhbjnlSWqhtElMG3Q3LQ/exec";
+    
     const DOMINIO_PERMITIDO = "@velotax.com.br";
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzUkip3uXIbxEOwv-8G2uRUGhfUF-evG90uHf4Ibd8R8ZHm7q3ONqL5OhNCE7Lc1YBG/exec";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
-    // Elementos do DOM
+    // ================== ELEMENTOS DO DOM ==================
     const identificacaoOverlay = document.getElementById('identificacao-overlay');
     const appWrapper = document.querySelector('.app-wrapper');
     const errorMsg = document.getElementById('identificacao-error');
 
+    // ================== VARIÁVEIS DE ESTADO ==================
     let ultimaPergunta = '';
     let ultimaLinhaDaFonte = null;
     let isTyping = false;
     let dadosAtendente = null;
     let tokenClient = null;
 
-    // Utiliza classes para esconder/mostrar overlay (evita inline style)
+    // ================== FUNÇÕES DE CONTROLE DE UI ==================
     function showOverlay() {
         identificacaoOverlay.classList.remove('hidden');
         appWrapper.classList.add('hidden');
@@ -25,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appWrapper.classList.remove('hidden');
     }
 
-    // Verifica se o script do Google Identity está carregado
+    // ================== LÓGICA DE AUTENTICAÇÃO ==================
     function waitForGoogleScript() {
         return new Promise((resolve, reject) => {
             const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             verificarIdentificacao();
         }).catch(error => {
             errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
-            errorMsg.style.display = 'block';
+            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
         });
     }
 
@@ -76,19 +79,19 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(user => {
             const email = user.email;
-            if (email.endsWith(DOMINIO_PERMITIDO)) {
+            if (email && email.endsWith(DOMINIO_PERMITIDO)) {
                 dadosAtendente = { nome: user.name, email: user.email, timestamp: Date.now() };
                 localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
                 hideOverlay();
                 iniciarBot(dadosAtendente);
             } else {
                 errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-                errorMsg.style.display = 'block';
+                errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
             }
         })
         .catch(error => {
             errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
-            errorMsg.style.display = 'block';
+            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
         });
     }
 
@@ -107,21 +110,24 @@ document.addEventListener('DOMContentLoaded', () => {
             hideOverlay();
             iniciarBot(dadosSalvos);
         } else {
+            localStorage.removeItem('dadosAtendenteChatbot');
             showOverlay();
         }
     }
 
-    // Função principal do bot
+    // ================== FUNÇÃO PRINCIPAL DO BOT ==================
     function iniciarBot(dadosAtendente) {
+        // Elementos do DOM do bot
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const themeSwitcher = document.getElementById('theme-switcher');
         const body = document.body;
         const questionSearch = document.getElementById('question-search');
+        
         document.getElementById('gemini-button').addEventListener('click', function() {
-    window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
-});
+            window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
+        });
 
         // Filtro de busca de perguntas
         questionSearch.addEventListener('input', (e) => {
@@ -129,7 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
             questions.forEach(question => {
                 const text = question.textContent.toLowerCase();
-                question.style.display = text.includes(searchTerm) ? 'block' : 'none';
+                // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
+                question.classList.toggle('hidden', !text.includes(searchTerm));
             });
         });
 
@@ -140,13 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const typingContainer = document.createElement('div');
             typingContainer.className = 'message-container bot typing-indicator';
             typingContainer.id = 'typing-indicator';
-            typingContainer.innerHTML = `
-                <div class="avatar bot">🤖</div>
-                <div class="message-content">
-                    <div class="message">
-                        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
-                    </div>
-                </div>`;
+            typingContainer.innerHTML = `<div class="avatar bot">🤖</div><div class="message-content"><div class="message"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
             chatBox.appendChild(typingContainer);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -163,18 +164,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 await navigator.clipboard.writeText(texto);
                 return true;
             } catch (err) {
+                // Fallback para navegadores mais antigos
                 const textArea = document.createElement("textarea");
                 textArea.value = texto;
-                textArea.style.position = "fixed";
-                textArea.style.top = "-9999px";
-                textArea.style.left = "-9999px";
+                // CORRIGIDO (CSP): Usa classe em vez de estilo inline
+                textArea.className = 'clipboard-helper'; 
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 try {
-                    const successful = document.execCommand('copy');
+                    document.execCommand('copy');
                     document.body.removeChild(textArea);
-                    return successful;
+                    return true;
                 } catch (fallbackErr) {
                     document.body.removeChild(textArea);
                     return false;
@@ -188,10 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container', sender);
             const avatarDiv = `<div class="avatar">${sender === 'user' ? '👤' : '🤖'}</div>`;
-            const messageContentDiv = `
-                <div class="message-content">
-                    <div class="message">${message.replace(/\n/g, '<br>')}</div>
-                </div>`;
+            const messageContentDiv = `<div class="message-content"><div class="message">${message.replace(/\n/g, '<br>')}</div></div>`;
             messageContainer.innerHTML = sender === 'user' ? messageContentDiv + avatarDiv : avatarDiv + messageContentDiv;
             chatBox.appendChild(messageContainer);
 
@@ -239,7 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Enviar feedback
         async function enviarFeedback(action, container) {
             if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
-            container.innerHTML = '<span style="font-size: 12px; color: var(--cor-texto-principal);">Obrigado!</span>';
+            // CORRIGIDO (CSP): Usa classe em vez de estilo inline
+            container.textContent = 'Obrigado!';
+            container.className = 'feedback-thanks';
+
             try {
                 await fetch(BACKEND_URL, {
                     method: 'POST',
@@ -264,13 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const response = await fetch(url); // Removido o method/headers desnecessários para um GET simples
                 hideTypingIndicator();
-                if (!response.ok) throw new Error(`Erro de rede: ${response.status}`);
+
+                if (!response.ok) {
+                    throw new Error(`Erro de rede ou CORS: ${response.status}`);
+                }
                 const data = await response.json();
+                
                 if (data.status === 'sucesso') {
                     ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
@@ -279,7 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 hideTypingIndicator();
-                addMessage("Erro de conexão. Verifique o console (F12) para mais detalhes.", 'bot');
+                addMessage("Erro de conexão. Verifique se a URL do Backend está correta e se o script foi reimplantado. Detalhes no console (F12).", 'bot');
+                console.error("Detalhes do erro de fetch:", error);
             }
         }
 
@@ -294,19 +297,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Listeners de eventos
         userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { 
-                e.preventDefault(); 
-                handleSendMessage(userInput.value); 
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSendMessage(userInput.value);
             }
         });
         sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
+        
         document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
             item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
         });
+        
         document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
-            document.getElementById('more-questions').style.display = e.currentTarget.classList.contains('expanded') ? 'block' : 'none';
+            const moreQuestions = document.getElementById('more-questions');
+            // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
+            moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
         });
+        
         themeSwitcher.addEventListener('click', () => {
             body.classList.toggle('dark-theme');
             const isDark = body.classList.contains('dark-theme');
@@ -328,9 +336,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Mensagem de boas-vindas
         const primeiroNome = dadosAtendente.nome.split(' ')[0];
-        addMessage(`Olá, ${primeiroNome}! Como posso te ajudar?`, 'bot');
+        addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
         setInitialTheme();
     }
 
+    // Inicia a aplicação
     initGoogleSignIn();
 });
