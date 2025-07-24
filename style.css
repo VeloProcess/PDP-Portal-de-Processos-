@@ -1,3 +1,5 @@
+.hidden { display: none !important; }
+
 :root {
     --cor-fundo: #f0f4f8;
     --cor-container: #ffffff;
