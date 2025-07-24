@@ -562,10 +562,20 @@ body.dark-theme::before {
 
 /* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
 .emoji-icon {
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: inline-block; /* Garante que o span se comporte bem */
+    font-size: 28px; /* ou o tamanho que preferir */
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    border-radius: 0;
+    width: auto;
+    height: auto;
+    box-shadow: none;
+    display: inline;
+    transition: transform 0.2s;
 }
+
+#theme-switcher:hover {
+    transform: scale(1.1);
+    background: none;
