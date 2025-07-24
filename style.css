@@ -559,3 +559,13 @@ body.dark-theme::before {
         display: none;
     }
 }
+
+/* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
+.emoji-icon {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-block; /* Garante que o span se comporte bem */
+}
