@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Configurações
     const DOMINIO_PERMITIDO = "@velotax.com.br";
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbx0u-3qCjA-sVmkOSPDJSf4R2OKRnLxAb0j_gPQ_RaNLN8DzrMj9ZgFQWsUe8diN2grFg/exec";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzUkip3uXIbxEOwv-8G2uRUGhfUF-evG90uHf4Ibd8R8ZHm7q3ONqL5OhNCE7Lc1YBG/exec";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
     // Elementos do DOM
