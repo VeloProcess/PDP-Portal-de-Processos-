@@ -559,37 +559,43 @@ body.dark-theme::before {
         display: none;
     }
 }
-
-/* --- ESTILOS PARA OS BOTÕES DE AÇÃO RÁPIDA --- */
-button.quick-action {
-    flex-grow: 1;
-    background-color: none;
-    border: none;
-    color: var(--cor-texto-principal);
-    border-radius: var(--borda-raio-sm);
-    padding: var(--espaco-sm) var(--espaco-md);
-    text-align: left;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all var(--transicao-rapida);
-    display: flex;
-    align-items: center;
-    gap: var(--espaco-sm);
-}
-
-button.quick-action:hover {
-    background-color: none;
-    color: none;
-    border-color: none;
-}
-
 /* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
 .emoji-icon {
     background: none !important;
     border: none !important;
+    box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    box-shadow: none !important;
-    display: inline-block;
+    display: inline-block; /* Garante que o span se comporte bem */
+}
+
+/* Garante que o balão do bot seja a referência de posição */
+.bot-msg {
+    position: relative; 
+    padding-right: 40px; /* Cria um espaço para o botão não sobrepor o texto */
+}
+
+/* Estilo do botão de copiar */
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--cor-texto-principal);
+    opacity: 0; /* Começa invisível */
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Efeito para o botão aparecer */
+.bot-msg:hover .copy-btn {
+    opacity: 0.6; /* Fica visível ao passar o mouse na mensagem */
+}
+
+/* Efeito de destaque no próprio botão */
+.copy-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
 }
