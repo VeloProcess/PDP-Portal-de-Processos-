@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://github.com https://raw.githubusercontent.com; script-src 'self' https://apis.google.com https://www.gstatic.com https://accounts.google.com; frame-src https://accounts.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://github.com https://raw.githubusercontent.com https://www.google.com; script-src 'self' https://apis.google.com https://www.gstatic.com https://accounts.google.com; frame-src https://accounts.google.com; style-src 'self';">
     <title>Painel Interno com ChatBot - Tema Clássico</title>
     <link rel="icon" type="image/png" href="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true">
     <link rel="stylesheet" href="style.css">
@@ -18,7 +18,7 @@
                 <img src="https://www.google.com/favicon.ico" alt="Google Icon">
                 Entrar com Google
             </div>
-            <p id="identificacao-error" style="display:none; color: var(--cor-erro); margin-top: 15px;">Acesso permitido apenas para e-mails corporativos</p>
+            <p id="identificacao-error" class="identificacao-error">Acesso permitido apenas para e-mails corporativos!</p>
         </div>
     </div>
 
@@ -61,9 +61,9 @@
                         </ul>
                     </div>
                 </div>
-                <div style="margin-top: auto; padding-top: var(--espaco-md); border-top: 1px solid var(--cor-borda);">
-                    <h2><p style="font-size: 13px; color: var(--cor-azul-medio);">📋 Clique na prancheta ao lado da resposta para copiar</p></h2>
-                    <p style="font-size: 12px; margin-top: var(--espaco-sm);"><strong>Observação: As informações aqui são de uso interno.</strong></p>
+                <div class="sidebar-footer">
+                    <h2><p class="sidebar-note">📋 Clique na prancheta ao lado da resposta para copiar</p></h2>
+                    <p class="sidebar-warning"><strong>Observação: As informações aqui são de uso interno.</strong></p>
                 </div>
             </div>
         </div>
@@ -88,7 +88,7 @@
             <div class="panel-header">
                 <h2>Notícias e Alertas</h2>
             </div>
-            <div id="news-list" style="padding: var(--espaco-md);">
+            <div id="news-list" class="news-list">
                 <div class="news-item critical-alert">
                     <h2>Desligamos a Antecipação novamente, pessoal</h2>
                     <small>Publicado em: 07/07/2025</small>
