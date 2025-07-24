@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     errorMsg.style.display = 'block';
                 }
             } else {
-                errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
+                errorMsg.textContent = 'Acesso permitido apenas para e-mails corporativos!';
                 errorMsg.style.display = 'block';
                 if (auth2) {
                     auth2.signOut();
