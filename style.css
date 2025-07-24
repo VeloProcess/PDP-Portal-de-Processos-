@@ -563,8 +563,8 @@ body.dark-theme::before {
 /* --- ESTILOS PARA OS BOTÕES DE AÇÃO RÁPIDA --- */
 button.quick-action {
     flex-grow: 1;
-    background-color: var(--cor-container);
-    border: 1px solid var(--cor-borda);
+    background-color: none;
+    border: none;
     color: var(--cor-texto-principal);
     border-radius: var(--borda-raio-sm);
     padding: var(--espaco-sm) var(--espaco-md);
@@ -579,9 +579,9 @@ button.quick-action {
 }
 
 button.quick-action:hover {
-    background-color: var(--cor-azul-medio);
-    color: white;
-    border-color: var(--cor-azul-medio);
+    background-color: none;
+    color: none;
+    border-color: none;
 }
 
 /* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
