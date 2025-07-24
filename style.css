@@ -600,16 +600,60 @@ body.dark-theme::before {
     transform: scale(1.1);
 }
 
-.feedback-btn {
+/* --- ESTILOS COMPLETOS PARA O FEEDBACK --- */
 
-position: absolute;
-    top: 8px;
-    right: 8px;
+/* Container que agrupa os botões de feedback */
+.feedback-container {
+    display: flex;
+    justify-content: flex-end; /* Alinha os botões à direita */
+    align-items: center;
+    gap: var(--espaco-xs);
+    margin-top: var(--espaco-sm);
+    height: 28px; /* Altura fixa para evitar pulos de layout */
+}
+
+/* Estilo base para ambos os botões (like e dislike) */
+.feedback-btn {
     background: transparent;
     border: none;
+    font-size: 16px;
     cursor: pointer;
-    font-size: 18px;
-    color: var(--cor-texto-principal);
-    opacity: 0; /* Começa invisível */
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    opacity: 0.6;
+    transition: all var(--transicao-rapida);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* Efeito de destaque ao passar o mouse */
+.feedback-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+    background: var(--cor-caixa-chat);
+}
+
+/* Classe adicionada via JS após o clique para indicar a seleção */
+.feedback-btn.active {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Cor específica para o botão de "like" quando ativo */
+.feedback-btn.positive.active {
+    color: var(--cor-sucesso);
+}
+
+/* Cor específica para o botão de "dislike" quando ativo */
+.feedback-btn.negative.active {
+    color: var(--cor-erro);
+}
+
+/* Estilo para a mensagem de "Obrigado!" que substitui os botões */
+.feedback-thanks {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--cor-texto-secundario);
 }
