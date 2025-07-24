@@ -10,28 +10,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbx0u-3qCjA-sVmkOSPDJSf4R2OKRnLxAb0j_gPQ_RaNLN8DzrMj9ZgFQWsUe8diN2grFg/exec";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
-    // Função para carregar a biblioteca gapi.auth2
-
-function loadGoogleAuth() {
+// Função para verificar se o script GIS está carregado
+function waitForGoogleScript() {
     return new Promise((resolve, reject) => {
-        if (!window.google || !window.google.accounts) {
-            console.error('Biblioteca Google Identity Services não carregada. Verifique o script https://accounts.google.com/gsi/client.');
-            reject(new Error('Falha ao carregar Google Identity Services'));
+        const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+        if (!script) {
+            reject(new Error('Script Google Identity Services não encontrado no HTML.'));
             return;
         }
-        const authInstance = window.google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: 'profile email',
-            callback: (response) => {
-                if (response.error) {
-                    console.error('Erro na inicialização do Google Sign-In:', response.error);
-                    reject(response);
-                } else {
-                    resolve(response);
-                }
+        if (window.google && window.google.accounts) {
+            resolve(window.google.accounts);
+            return;
+        }
+        script.addEventListener('load', () => {
+            if (window.google && window.google.accounts) {
+                resolve(window.google.accounts);
+            } else {
+                reject(new Error('Falha ao carregar Google Identity Services. Verifique o script https://accounts.google.com/gsi/client.'));
             }
         });
-        resolve(authInstance);
+        script.addEventListener('error', () => {
+            reject(new Error('Erro ao carregar o script https://accounts.google.com/gsi/client.'));
+        });
+    });
+}
+
+function loadGoogleAuth() {
+    return waitForGoogleScript().then(accounts => {
+        return new Promise((resolve, reject) => {
+            const authInstance = accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'profile email',
+                callback: (response) => {
+                    if (response.error) {
+                        console.error('Erro na inicialização do Google Sign-In:', response.error);
+                        reject(response);
+                    } else {
+                        resolve(response);
+                    }
+                }
+            });
+            resolve(authInstance);
+        });
     });
 }
 
@@ -49,10 +69,7 @@ function initGoogleSignIn() {
     });
 }
 
-// Função para lidar com o token retornado
 function handleGoogleSignIn(response) {
-    // Aqui você pode processar o token de acesso (response.access_token)
-    // Exemplo: Verificar o e-mail do usuário com uma chamada à API
     fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: {
             Authorization: `Bearer ${response.access_token}`
