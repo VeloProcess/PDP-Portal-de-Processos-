@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbx0u-3qCjA-sVmkOSPDJSf4R2OKRnLxAb0j_gPQ_RaNLN8DzrMj9ZgFQWsUe8diN2grFg/exec";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
+    // Elementos do DOM
     const identificacaoOverlay = document.getElementById('identificacao-overlay');
     const appWrapper = document.querySelector('.app-wrapper');
     const errorMsg = document.getElementById('identificacao-error');
@@ -14,7 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let dadosAtendente = null;
     let tokenClient = null;
 
-    // Função para verificar se o script GIS está carregado
+    // Utiliza classes para esconder/mostrar overlay (evita inline style)
+    function showOverlay() {
+        identificacaoOverlay.classList.remove('hidden');
+        appWrapper.classList.add('hidden');
+    }
+    function hideOverlay() {
+        identificacaoOverlay.classList.add('hidden');
+        appWrapper.classList.remove('hidden');
+    }
+
+    // Verifica se o script do Google Identity está carregado
     function waitForGoogleScript() {
         return new Promise((resolve, reject) => {
             const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
@@ -30,11 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.google && window.google.accounts) {
                     resolve(window.google.accounts);
                 } else {
-                    reject(new Error('Falha ao carregar Google Identity Services. Verifique o script https://accounts.google.com/gsi/client.'));
+                    reject(new Error('Falha ao carregar Google Identity Services.'));
                 }
             });
             script.addEventListener('error', () => {
-                reject(new Error('Erro ao carregar o script https://accounts.google.com/gsi/client.'));
+                reject(new Error('Erro ao carregar o script Google Identity Services.'));
             });
         });
     }
@@ -51,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             verificarIdentificacao();
         }).catch(error => {
-            console.error('Erro ao carregar Google Auth:', error);
             errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
             errorMsg.style.display = 'block';
         });
@@ -67,10 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(user => {
             const email = user.email;
             if (email.endsWith(DOMINIO_PERMITIDO)) {
-                identificacaoOverlay.style.display = 'none';
-                appWrapper.style.visibility = 'visible';
                 dadosAtendente = { nome: user.name, email: user.email, timestamp: Date.now() };
                 localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+                hideOverlay();
                 iniciarBot(dadosAtendente);
             } else {
                 errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
@@ -78,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         })
         .catch(error => {
-            console.error('Erro ao verificar usuário:', error);
             errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
             errorMsg.style.display = 'block';
         });
@@ -96,12 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('dadosAtendenteChatbot');
         }
         if (dadosSalvos && dadosSalvos.email && dadosSalvos.email.endsWith(DOMINIO_PERMITIDO) && (Date.now() - dadosSalvos.timestamp < umDiaEmMs)) {
-            identificacaoOverlay.style.display = 'none';
-            appWrapper.style.visibility = 'visible';
+            hideOverlay();
             iniciarBot(dadosSalvos);
         } else {
-            identificacaoOverlay.style.display = 'flex';
-            appWrapper.style.visibility = 'hidden';
+            showOverlay();
         }
     }
 
@@ -117,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Filtro de busca de perguntas
         questionSearch.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list li');
+            const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
             questions.forEach(question => {
                 const text = question.textContent.toLowerCase();
                 question.style.display = text.includes(searchTerm) ? 'block' : 'none';
@@ -145,9 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function hideTypingIndicator() {
             isTyping = false;
             const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
+            if (typingIndicator) typingIndicator.remove();
         }
 
         // Função para copiar texto para a área de transferência
@@ -234,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
             container.innerHTML = '<span style="font-size: 12px; color: var(--cor-texto-principal);">Obrigado!</span>';
             try {
-                const response = await fetch(BACKEND_URL, {
+                await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -293,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
-        document.querySelectorAll('#quick-questions-list li, #more-questions-list li').forEach(item => {
+        document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
             item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
         });
         document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
@@ -325,6 +329,5 @@ document.addEventListener('DOMContentLoaded', () => {
         setInitialTheme();
     }
 
-    // Iniciar Google Sign-In
     initGoogleSignIn();
 });
