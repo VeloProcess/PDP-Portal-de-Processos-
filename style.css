@@ -599,3 +599,17 @@ body.dark-theme::before {
     opacity: 1;
     transform: scale(1.1);
 }
+
+.feedback-btn {
+
+position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--cor-texto-principal);
+    opacity: 0; /* Começa invisível */
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
