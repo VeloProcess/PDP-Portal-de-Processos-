@@ -12,28 +12,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Função para carregar a biblioteca gapi.auth2
     function loadGoogleAuth() {
-        return new Promise((resolve, reject) => {
-            if (typeof gapi === 'undefined') {
-                console.error('gapi não está definido. Verifique o carregamento do script https://apis.google.com/js/api:client.js');
-                reject(new Error('Falha ao carregar gapi'));
-                return;
-            }
-            gapi.load('auth2', () => {
-                gapi.auth2.init({
-                    client_id: CLIENT_ID,
-                    scope: 'profile email'
-                }).then(() => {
-                    auth2 = gapi.auth2.getAuthInstance();
-                    console.log('Google Auth inicializado com sucesso');
-                    resolve(auth2);
-                }).catch(error => {
-                    console.error('Erro ao inicializar gapi.auth2:', error);
-                    reject(error);
-                });
+    return new Promise((resolve, reject) => {
+        if (typeof gapi === 'undefined') {
+            console.error('gapi não está definido. Verifique o carregamento do script https://apis.google.com/js/api:client.js');
+            reject(new Error('Falha ao carregar gapi'));
+            return;
+        }
+        gapi.load('auth2', () => {
+            gapi.auth2.init({
+                client_id: CLIENT_ID,
+                scope: 'profile email'
+            }).then(() => {
+                auth2 = gapi.auth2.getAuthInstance();
+                console.log('Google Auth inicializado com sucesso');
+                resolve(auth2);
+            }).catch(error => {
+                console.error('Erro ao inicializar gapi.auth2:', error.error, error.details);
+                reject(error);
             });
         });
-    }
+    });
+}
 
+function initGoogleSignIn() {
+    loadGoogleAuth().then(authInstance => {
+        auth2 = authInstance;
+        const signInButton = document.getElementById('google-signin-button');
+        signInButton.addEventListener('click', () => {
+            auth2.signIn().then(googleUser => {
+                handleGoogleSignIn(googleUser);
+            }).catch(error => {
+                console.error('Erro ao fazer login com Google:', error);
+                const errorMsg = document.getElementById('identificacao-error');
+                errorMsg.textContent = 'Erro ao fazer login com Google. Tente novamente.';
+                errorMsg.style.display = 'block';
+            });
+        });
+        verificarIdentificacao(auth2);
+    }).catch(error => {
+        console.error('Erro ao carregar Google Auth:', error);
+        const errorMsg = document.getElementById('identificacao-error');
+        errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
+        errorMsg.style.display = 'block';
+    });
+}
     // Função para lidar com o login do Google
     function handleGoogleSignIn(googleUser) {
         try {
