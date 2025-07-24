@@ -444,3 +444,32 @@ body.dark-theme::before {
     50% { opacity: 1; }
     100% { opacity: 0.6; }
 }
+
+/* ================== CABEÇALHO DO CHAT ================== */
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-md); /* Adiciona um espaço entre o logo, título e botão */
+    padding: var(--espaco-sm) var(--espaco-lg); /* Espaçamento interno */
+    border-bottom: 1px solid var(--cor-borda);
+    background-color: var(--cor-container); /* Garante a cor de fundo correta */
+}
+
+.chat-logo {
+    width: var(--avatar-size);  /* Define a largura (36px, da sua variável) */
+    height: var(--avatar-size); /* Define a altura (36px, da sua variável) */
+    border-radius: 50%; /* Opcional: deixa o contêiner do logo redondo */
+    object-fit: cover;    /* Garante que a imagem se ajuste bem */
+}
+
+.chat-title {
+    flex-grow: 1; /* Faz o título ocupar o espaço disponível, empurrando o botão de tema para a direita */
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Ajuste no botão de tema para garantir que ele não tenha margens indesejadas */
+#theme-switcher {
+    flex-shrink: 0; /* Impede que o botão seja espremido */
+}
