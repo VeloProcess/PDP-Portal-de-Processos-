@@ -560,22 +560,36 @@ body.dark-theme::before {
     }
 }
 
-/* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
-.emoji-icon {
-    font-size: 28px; /* ou o tamanho que preferir */
-    background: none;
-    border: none;
-    padding: 0;
-    color: inherit;
+/* --- ESTILOS PARA OS BOTÕES DE AÇÃO RÁPIDA --- */
+button.quick-action {
+    flex-grow: 1;
+    background-color: var(--cor-container);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-texto-principal);
+    border-radius: var(--borda-raio-sm);
+    padding: var(--espaco-sm) var(--espaco-md);
+    text-align: left;
     cursor: pointer;
-    border-radius: 0;
-    width: auto;
-    height: auto;
-    box-shadow: none;
-    display: inline;
-    transition: transform 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transicao-rapida);
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-sm);
 }
 
-#theme-switcher:hover {
-    transform: scale(1.1);
-    background: none;
+button.quick-action:hover {
+    background-color: var(--cor-azul-medio);
+    color: white;
+    border-color: var(--cor-azul-medio);
+}
+
+/* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
+.emoji-icon {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    display: inline-block;
+}
