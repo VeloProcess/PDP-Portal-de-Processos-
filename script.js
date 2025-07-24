@@ -11,44 +11,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
     // Função para carregar a biblioteca gapi.auth2
-    function loadGoogleAuth() {
+
+function loadGoogleAuth() {
     return new Promise((resolve, reject) => {
-        if (typeof gapi === 'undefined') {
-            console.error('gapi não está definido. Verifique o carregamento do script https://apis.google.com/js/api:client.js');
-            reject(new Error('Falha ao carregar gapi'));
+        if (!window.google || !window.google.accounts) {
+            console.error('Biblioteca Google Identity Services não carregada. Verifique o script https://accounts.google.com/gsi/client.');
+            reject(new Error('Falha ao carregar Google Identity Services'));
             return;
         }
-        gapi.load('auth2', () => {
-            gapi.auth2.init({
-                client_id: CLIENT_ID,
-                scope: 'profile email'
-            }).then(() => {
-                auth2 = gapi.auth2.getAuthInstance();
-                console.log('Google Auth inicializado com sucesso');
-                resolve(auth2);
-            }).catch(error => {
-                console.error('Erro ao inicializar gapi.auth2:', error.error, error.details);
-                reject(error);
-            });
+        const authInstance = window.google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: 'profile email',
+            callback: (response) => {
+                if (response.error) {
+                    console.error('Erro na inicialização do Google Sign-In:', response.error);
+                    reject(response);
+                } else {
+                    resolve(response);
+                }
+            }
         });
+        resolve(authInstance);
     });
 }
 
 function initGoogleSignIn() {
     loadGoogleAuth().then(authInstance => {
-        auth2 = authInstance;
         const signInButton = document.getElementById('google-signin-button');
         signInButton.addEventListener('click', () => {
-            auth2.signIn().then(googleUser => {
-                handleGoogleSignIn(googleUser);
-            }).catch(error => {
-                console.error('Erro ao fazer login com Google:', error);
-                const errorMsg = document.getElementById('identificacao-error');
-                errorMsg.textContent = 'Erro ao fazer login com Google. Tente novamente.';
-                errorMsg.style.display = 'block';
-            });
+            authInstance.requestAccessToken();
         });
-        verificarIdentificacao(auth2);
     }).catch(error => {
         console.error('Erro ao carregar Google Auth:', error);
         const errorMsg = document.getElementById('identificacao-error');
@@ -56,44 +48,40 @@ function initGoogleSignIn() {
         errorMsg.style.display = 'block';
     });
 }
-    // Função para lidar com o login do Google
-    function handleGoogleSignIn(googleUser) {
-        try {
-            const profile = googleUser.getBasicProfile();
-            if (!profile) {
-                throw new Error('Perfil do usuário não encontrado');
-            }
-            const nome = profile.getName();
-            const email = profile.getEmail().toLowerCase();
-            console.log('Google Sign-In - Nome:', nome, 'Email:', email);
 
-            if (email && email.endsWith(DOMINIO_PERMITIDO)) {
-                const dadosAtendente = { nome, email, timestamp: Date.now() };
-                try {
-                    localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
-                    console.log('Dados salvos no localStorage:', dadosAtendente);
-                    identificacaoOverlay.style.display = 'none';
-                    appWrapper.style.visibility = 'visible';
-                    errorMsg.style.display = 'none';
-                    iniciarBot(dadosAtendente);
-                } catch (e) {
-                    console.error('Erro ao salvar dados no localStorage:', e);
-                    errorMsg.textContent = 'Erro ao salvar dados. Tente novamente.';
-                    errorMsg.style.display = 'block';
-                }
-            } else {
-                errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-                errorMsg.style.display = 'block';
-                if (auth2) {
-                    auth2.signOut();
-                }
-            }
-        } catch (error) {
-            console.error('Erro ao processar login do Google:', error);
-            errorMsg.textContent = 'Erro ao processar login. Tente novamente.';
+// Função para lidar com o token retornado
+function handleGoogleSignIn(response) {
+    // Aqui você pode processar o token de acesso (response.access_token)
+    // Exemplo: Verificar o e-mail do usuário com uma chamada à API
+    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: {
+            Authorization: `Bearer ${response.access_token}`
+        }
+    })
+    .then(res => res.json())
+    .then(user => {
+        const email = user.email;
+        if (email.endsWith('@velotax.com.br')) {
+            document.getElementById('identificacao-overlay').style.display = 'none';
+            document.querySelector('.app-wrapper').style.visibility = 'visible';
+        } else {
+            const errorMsg = document.getElementById('identificacao-error');
+            errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
             errorMsg.style.display = 'block';
         }
-    }
+    })
+    .catch(error => {
+        console.error('Erro ao verificar usuário:', error);
+        const errorMsg = document.getElementById('identificacao-error');
+        errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
+        errorMsg.style.display = 'block';
+    });
+}
+
+// Inicializar ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    initGoogleSignIn();
+});
 
     // Função para verificar a sessão existente
     function verificarIdentificacao(auth2) {
