@@ -1,158 +1,108 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Elementos do DOM
-    const identificacaoOverlay = document.getElementById('identificacao-overlay');
-    const appWrapper = document.querySelector('.app-wrapper');
-    const errorMsg = document.getElementById('identificacao-error');
-    let auth2 = null;
-
     // Configurações
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbx0u-3qCjA-sVmkOSPDJSf4R2OKRnLxAb0j_gPQ_RaNLN8DzrMj9ZgFQWsUe8diN2grFg/exec";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
-// Função para verificar se o script GIS está carregado
-function waitForGoogleScript() {
-    return new Promise((resolve, reject) => {
-        const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-        if (!script) {
-            reject(new Error('Script Google Identity Services não encontrado no HTML.'));
-            return;
-        }
-        if (window.google && window.google.accounts) {
-            resolve(window.google.accounts);
-            return;
-        }
-        script.addEventListener('load', () => {
+    const identificacaoOverlay = document.getElementById('identificacao-overlay');
+    const appWrapper = document.querySelector('.app-wrapper');
+    const errorMsg = document.getElementById('identificacao-error');
+
+    let ultimaPergunta = '';
+    let ultimaLinhaDaFonte = null;
+    let isTyping = false;
+    let dadosAtendente = null;
+    let tokenClient = null;
+
+    // Função para verificar se o script GIS está carregado
+    function waitForGoogleScript() {
+        return new Promise((resolve, reject) => {
+            const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+            if (!script) {
+                reject(new Error('Script Google Identity Services não encontrado no HTML.'));
+                return;
+            }
             if (window.google && window.google.accounts) {
                 resolve(window.google.accounts);
-            } else {
-                reject(new Error('Falha ao carregar Google Identity Services. Verifique o script https://accounts.google.com/gsi/client.'));
+                return;
             }
-        });
-        script.addEventListener('error', () => {
-            reject(new Error('Erro ao carregar o script https://accounts.google.com/gsi/client.'));
-        });
-    });
-}
-
-function loadGoogleAuth() {
-    return waitForGoogleScript().then(accounts => {
-        return new Promise((resolve, reject) => {
-            const authInstance = accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'profile email',
-                callback: (response) => {
-                    if (response.error) {
-                        console.error('Erro na inicialização do Google Sign-In:', response.error);
-                        reject(response);
-                    } else {
-                        resolve(response);
-                    }
+            script.addEventListener('load', () => {
+                if (window.google && window.google.accounts) {
+                    resolve(window.google.accounts);
+                } else {
+                    reject(new Error('Falha ao carregar Google Identity Services. Verifique o script https://accounts.google.com/gsi/client.'));
                 }
             });
-            resolve(authInstance);
+            script.addEventListener('error', () => {
+                reject(new Error('Erro ao carregar o script https://accounts.google.com/gsi/client.'));
+            });
         });
-    });
-}
+    }
 
-function initGoogleSignIn() {
-    loadGoogleAuth().then(authInstance => {
-        const signInButton = document.getElementById('google-signin-button');
-        signInButton.addEventListener('click', () => {
-            authInstance.requestAccessToken();
-        });
-    }).catch(error => {
-        console.error('Erro ao carregar Google Auth:', error);
-        const errorMsg = document.getElementById('identificacao-error');
-        errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
-        errorMsg.style.display = 'block';
-    });
-}
-
-function handleGoogleSignIn(response) {
-    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: {
-            Authorization: `Bearer ${response.access_token}`
-        }
-    })
-    .then(res => res.json())
-    .then(user => {
-        const email = user.email;
-        if (email.endsWith('@velotax.com.br')) {
-            document.getElementById('identificacao-overlay').style.display = 'none';
-            document.querySelector('.app-wrapper').style.visibility = 'visible';
-        } else {
-            const errorMsg = document.getElementById('identificacao-error');
-            errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
+    function initGoogleSignIn() {
+        waitForGoogleScript().then(accounts => {
+            tokenClient = accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'profile email',
+                callback: handleGoogleSignIn
+            });
+            document.getElementById('google-signin-button').addEventListener('click', function() {
+                tokenClient.requestAccessToken();
+            });
+            verificarIdentificacao();
+        }).catch(error => {
+            console.error('Erro ao carregar Google Auth:', error);
+            errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
             errorMsg.style.display = 'block';
-        }
-    })
-    .catch(error => {
-        console.error('Erro ao verificar usuário:', error);
-        const errorMsg = document.getElementById('identificacao-error');
-        errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
-        errorMsg.style.display = 'block';
-    });
-}
+        });
+    }
 
-// Inicializar ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-    initGoogleSignIn();
-});
+    function handleGoogleSignIn(response) {
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: {
+                Authorization: `Bearer ${response.access_token}`
+            }
+        })
+        .then(res => res.json())
+        .then(user => {
+            const email = user.email;
+            if (email.endsWith(DOMINIO_PERMITIDO)) {
+                identificacaoOverlay.style.display = 'none';
+                appWrapper.style.visibility = 'visible';
+                dadosAtendente = { nome: user.name, email: user.email, timestamp: Date.now() };
+                localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+                iniciarBot(dadosAtendente);
+            } else {
+                errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
+                errorMsg.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao verificar usuário:', error);
+            errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
+            errorMsg.style.display = 'block';
+        });
+    }
 
-    // Função para verificar a sessão existente
-    function verificarIdentificacao(auth2) {
+    function verificarIdentificacao() {
         const umDiaEmMs = 24 * 60 * 60 * 1000;
         let dadosSalvos = null;
-
         try {
             const dadosSalvosString = localStorage.getItem('dadosAtendenteChatbot');
-            console.log('Dados salvos no localStorage:', dadosSalvosString);
             if (dadosSalvosString) {
                 dadosSalvos = JSON.parse(dadosSalvosString);
-                console.log('Dados parsed:', dadosSalvos);
             }
         } catch (e) {
-            console.error('Erro ao parsear dados do localStorage:', e);
             localStorage.removeItem('dadosAtendenteChatbot');
         }
-
         if (dadosSalvos && dadosSalvos.email && dadosSalvos.email.endsWith(DOMINIO_PERMITIDO) && (Date.now() - dadosSalvos.timestamp < umDiaEmMs)) {
-            console.log('Sessão válida, exibindo app-wrapper');
             identificacaoOverlay.style.display = 'none';
             appWrapper.style.visibility = 'visible';
             iniciarBot(dadosSalvos);
         } else {
-            console.log('Sessão inválida ou expirada, exibindo login');
             identificacaoOverlay.style.display = 'flex';
             appWrapper.style.visibility = 'hidden';
-            if (auth2 && auth2.isSignedIn.get()) {
-                auth2.signOut();
-                console.log('Usuário desconectado devido a sessão inválida');
-            }
         }
-    }
-
-    // Inicializar Google Sign-In
-    function initGoogleSignIn() {
-        loadGoogleAuth().then(authInstance => {
-            auth2 = authInstance;
-            const signInButton = document.getElementById('google-signin-button');
-            signInButton.addEventListener('click', () => {
-                auth2.signIn().then(googleUser => {
-                    handleGoogleSignIn(googleUser);
-                }).catch(error => {
-                    console.error('Erro ao fazer login com Google:', error);
-                    errorMsg.textContent = 'Erro ao fazer login com Google. Tente novamente.';
-                    errorMsg.style.display = 'block';
-                });
-            });
-            verificarIdentificacao(auth2);
-        }).catch(error => {
-            console.error('Erro ao carregar Google Auth:', error);
-            errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão.';
-            errorMsg.style.display = 'block';
-        });
     }
 
     // Função principal do bot
@@ -163,37 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const themeSwitcher = document.getElementById('theme-switcher');
         const body = document.body;
         const questionSearch = document.getElementById('question-search');
-        
-        let ultimaPergunta = '';
-        let ultimaLinhaDaFonte = null;
-        let isTyping = false;
-
-        // Função para copiar texto para a área de transferência
-        async function copiarTextoParaClipboard(texto) {
-            try {
-                await navigator.clipboard.writeText(texto);
-                return true;
-            } catch (err) {
-                console.warn('Método moderno de cópia falhou, tentando fallback...', err);
-                const textArea = document.createElement("textarea");
-                textArea.value = texto;
-                textArea.style.position = "fixed";
-                textArea.style.top = "-9999px";
-                textArea.style.left = "-9999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    const successful = document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    return successful;
-                } catch (fallbackErr) {
-                    console.error('Falha total ao copiar com ambos os métodos:', fallbackErr);
-                    document.body.removeChild(textArea);
-                    return false;
-                }
-            }
-        }
 
         // Filtro de busca de perguntas
         questionSearch.addEventListener('input', (e) => {
@@ -228,6 +147,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const typingIndicator = document.getElementById('typing-indicator');
             if (typingIndicator) {
                 typingIndicator.remove();
+            }
+        }
+
+        // Função para copiar texto para a área de transferência
+        async function copiarTextoParaClipboard(texto) {
+            try {
+                await navigator.clipboard.writeText(texto);
+                return true;
+            } catch (err) {
+                const textArea = document.createElement("textarea");
+                textArea.value = texto;
+                textArea.style.position = "fixed";
+                textArea.style.top = "-9999px";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return successful;
+                } catch (fallbackErr) {
+                    document.body.removeChild(textArea);
+                    return false;
+                }
             }
         }
 
@@ -300,9 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         email: dadosAtendente.email
                     })
                 });
-                console.log('Feedback enviado:', response.status);
             } catch (error) {
-                console.error("Erro ao enviar feedback:", error);
+                // Silenciar erro de feedback
             }
         }
 
@@ -318,11 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
                 });
-                if (!response.ok) {
-                    throw new Error(`Erro de rede: ${response.status}`);
-                }
-                const data = await response.json();
                 hideTypingIndicator();
+                if (!response.ok) throw new Error(`Erro de rede: ${response.status}`);
+                const data = await response.json();
                 if (data.status === 'sucesso') {
                     ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
@@ -331,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 hideTypingIndicator();
-                console.error("Erro ao buscar resposta:", error);
                 addMessage("Erro de conexão. Verifique o console (F12) para mais detalhes.", 'bot');
             }
         }
@@ -352,18 +292,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleSendMessage(userInput.value); 
             }
         });
-        
         sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
-        
         document.querySelectorAll('#quick-questions-list li, #more-questions-list li').forEach(item => {
             item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
         });
-
         document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
             document.getElementById('more-questions').style.display = e.currentTarget.classList.contains('expanded') ? 'block' : 'none';
         });
-
         themeSwitcher.addEventListener('click', () => {
             body.classList.toggle('dark-theme');
             const isDark = body.classList.contains('dark-theme');
