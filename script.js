@@ -119,6 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const themeSwitcher = document.getElementById('theme-switcher');
         const body = document.body;
         const questionSearch = document.getElementById('question-search');
+        document.getElementById('gemini-button').addEventListener('click', function() {
+    window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
+});
 
         // Filtro de busca de perguntas
         questionSearch.addEventListener('input', (e) => {
