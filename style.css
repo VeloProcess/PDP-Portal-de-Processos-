@@ -1,11 +1,5 @@
-/* ==========================================================================
-   CSS Unificado
-   ========================================================================== */
-
 /* Oculta elementos via JS/HTML */
-.hidden {
-    display: none !important;
-}
+.hidden { display: none !important; }
 
 /* ================== VARIÁVEIS ================== */
 :root {
@@ -57,7 +51,7 @@ body.dark-theme {
     --cor-info: #1976D2;
 }
 
-/* ================== ESTILOS GLOBAIS E FUNDO ================== */
+/* ================== FUNDO DE IMAGEM ================== */
 body {
     font-family: 'Segoe UI', 'Arial', sans-serif;
     background: var(--cor-fundo);
@@ -73,25 +67,22 @@ body {
     position: relative;
 }
 
+/* Imagem de fundo por baixo de tudo */
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    top: 0; left: 0; width: 100vw; height: 100vh;
     background-image: url('https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed.png?raw=true');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
     background-attachment: fixed;
     z-index: -1;
-    opacity: 0.22;
+    opacity: 0.22; /* ajuste conforme preferir */
     pointer-events: none;
 }
-
 body.dark-theme::before {
-    opacity: 0.12;
+    opacity: 0.12; /* menos destaque no dark */
 }
 
 /* ================== ESTRUTURA PRINCIPAL ================== */
@@ -103,7 +94,6 @@ body.dark-theme::before {
     height: 95vh;
     gap: var(--espaco-md);
     transition: var(--transicao-normal);
-    visibility: hidden;
 }
 
 .panel {
@@ -140,60 +130,6 @@ body.dark-theme::before {
     letter-spacing: 0.5px;
 }
 
-/* ================== IDENTIFICAÇÃO E LOGIN ================== */
-#identificacao-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 50, 100, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-    animation: fadeIn var(--transicao-normal);
-}
-
-#identificacao-box {
-    background: var(--cor-container);
-    padding: var(--espaco-xl);
-    border-radius: var(--borda-raio);
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    width: 90%;
-    max-width: 450px;
-    animation: slideUp var(--transicao-normal);
-}
-
-.google-signin-btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 12px 20px;
-    width: 100%;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    background-color: #4285F4;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-    justify-content: center;
-    transition: background-color var(--transicao-rapida);
-}
-
-.google-signin-btn:hover {
-    background-color: #357ae8;
-}
-
-.google-signin-btn img {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-}
-
 /* ================== TEMA ================== */
 #theme-switcher {
     font-size: 20px;
@@ -210,13 +146,12 @@ body.dark-theme::before {
     width: 36px;
     height: 36px;
 }
-
 #theme-switcher:hover {
     transform: scale(1.1);
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* ================== SIDEBAR (PERGUNTAS) ================== */
+/* ================== SIDEBAR ================== */
 .sidebar-content {
     padding: var(--espaco-md);
     overflow-y: auto;
@@ -229,7 +164,6 @@ body.dark-theme::before {
     position: relative;
     margin-bottom: var(--espaco-md);
 }
-
 #question-search {
     width: 100%;
     padding: var(--espaco-sm) var(--espaco-md);
@@ -241,13 +175,11 @@ body.dark-theme::before {
     font-size: 14px;
     transition: var(--transicao-normal);
 }
-
 #question-search:focus {
     border-color: var(--cor-azul-medio);
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
     outline: none;
 }
-
 .search-icon {
     position: absolute;
     left: 12px;
@@ -256,15 +188,7 @@ body.dark-theme::before {
     color: var(--cor-azul-medio);
 }
 
-.question-category {
-    font-size: 12px;
-    font-weight: bold;
-    color: var(--cor-azul-medio);
-    margin: var(--espaco-md) 0 var(--espaco-sm) 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
+/* IDs únicos para listas */
 #quick-questions-list,
 #more-questions-list-financeiro,
 #more-questions-list-tecnico {
@@ -297,39 +221,13 @@ body.dark-theme::before {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Seção de FAQ expansível */
-.expandable-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    padding: var(--espaco-sm) var(--espaco-md);
-    margin-top: var(--espaco-md);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--borda-raio);
-    background-color: var(--cor-fundo);
+.question-category {
+    font-size: 12px;
     font-weight: bold;
-    color: var(--cor-azul-escuro);
-    transition: var(--transicao-rapida);
-}
-
-.expandable-header:hover {
-    background-color: rgba(0, 0, 0, 0.03);
-}
-
-.expandable-header .arrow {
-    transition: transform var(--transicao-rapida);
-}
-
-.expandable-header.expanded .arrow {
-    transform: rotate(90deg);
-}
-
-.hidden-questions {
-    display: none;
-    padding-left: var(--espaco-md);
-    margin-top: var(--espaco-sm);
-    border-left: 2px solid var(--cor-azul-claro);
+    color: var(--cor-azul-medio);
+    margin: var(--espaco-md) 0 var(--espaco-sm) 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* ================== CHAT ================== */
@@ -352,19 +250,9 @@ body.dark-theme::before {
     display: flex;
     flex-direction: column;
 }
-
-.chat-box::-webkit-scrollbar {
-    width: 8px;
-}
-
-.chat-box::-webkit-scrollbar-track {
-    background: var(--cor-caixa-chat);
-}
-
-.chat-box::-webkit-scrollbar-thumb {
-    background-color: var(--cor-azul-medio);
-    border-radius: 4px;
-}
+.chat-box::-webkit-scrollbar { width: 8px; }
+.chat-box::-webkit-scrollbar-track { background: var(--cor-caixa-chat); }
+.chat-box::-webkit-scrollbar-thumb { background-color: var(--cor-azul-medio); border-radius: 4px; }
 
 .input-area {
     display: flex;
@@ -388,18 +276,65 @@ body.dark-theme::before {
     transition: var(--transicao-normal);
     padding-right: 48px;
 }
-
 #user-input:focus {
     border-color: var(--cor-azul-medio);
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 }
 
-/* ================== PAINEL DE NOTÍCIAS ================== */
-.news-list {
-    padding: var(--espaco-md);
-    overflow-y: auto;
+/* ... (restante igual ao seu CSS original) ... */
+
+/* ================== IDENTIFICAÇÃO ================== */
+#identificacao-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 50, 100, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    animation: fadeIn var(--transicao-normal);
+}
+#identificacao-box {
+    background: var(--cor-container);
+    padding: var(--espaco-xl);
+    border-radius: var(--borda-raio);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    text-align: center;
+    width: 90%;
+    max-width: 450px;
+    animation: slideUp var(--transicao-normal);
 }
 
+/* ================== EXPANDABLE FAQ ================== */
+.expandable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: var(--espaco-sm) var(--espaco-md);
+    margin-top: var(--espaco-md);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--borda-raio);
+    background-color: var(--cor-fundo);
+    font-weight: bold;
+    color: var(--cor-azul-escuro);
+    transition: var(--transicao-rapida);
+}
+.expandable-header:hover { background-color: rgba(0, 0, 0, 0.03); }
+.expandable-header .arrow { transition: transform var(--transicao-rapida); }
+.expandable-header.expanded .arrow { transform: rotate(90deg); }
+.hidden-questions {
+    display: none;
+    padding-left: var(--espaco-md);
+    margin-top: var(--espaco-sm);
+    border-left: 2px solid var(--cor-azul-claro);
+}
+
+/* ================== NOTÍCIAS ================== */
 .news-item {
     padding: var(--espaco-md);
     margin-bottom: var(--espaco-md);
@@ -408,199 +343,104 @@ body.dark-theme::before {
     border-left: 4px solid var(--cor-azul-medio);
     transition: var(--transicao-rapida);
 }
+.news-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--cor-sombra); }
+.critical-alert { border-left-color: var(--cor-erro); background: rgba(255, 77, 77, 0.1); }
+.warning-alert { border-left-color: var(--cor-alerta); background: rgba(255, 152, 0, 0.1); }
+.info-alert { border-left-color: var(--cor-info); background: rgba(33, 150, 243, 0.1); }
+.news-item h2 { margin-top: 0; color: var(--cor-azul-escuro); font-size: 16px; }
+.news-item small { color: var(--cor-azul-medio); display: block; margin-bottom: var(--espaco-sm); font-size: 12px; }
+.news-list { padding: var(--espaco-md); }
 
-.news-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--cor-sombra);
+/* ================== RESPONSIVO ================== */
+@media (max-width: 1200px) {
+    .app-wrapper { grid-template-columns: 250px 1fr; }
+    #news-panel { display: none; }
+}
+@media (max-width: 768px) {
+    .app-wrapper { grid-template-columns: 1fr; height: 100vh; }
+    #sidebar { display: none; }
+    .panel { padding: 0; }
+    .message-container { position: relative; }
+    .copy-btn {
+        position: absolute; top: 12px; right: -40px;
+        background: var(--cor-container); border: 1px solid var(--cor-borda);
+        border-radius: 50%; width: 32px; height: 32px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; color: var(--cor-texto-principal);
+        opacity: 0; transform: scale(0.8); transition: all var(--transicao-normal);
+    }
+    .message-container:hover .copy-btn { opacity: 1; transform: scale(1); right: -16px; }
+    .copy-btn:hover { background-color: var(--cor-fundo); transform: scale(1.1); }
+    .copy-btn.copied { color: var(--cor-sucesso); transform: scale(1.1); }
+    .avatar { width: 30px; height: 30px; font-size: 14px; }
+    .message { padding: var(--espaco-sm) var(--espaco-md); font-size: 14px; }
+    .input-area { padding: var(--espaco-sm); }
+    #user-input { padding: var(--espaco-sm) var(--espaco-md); font-size: 14px; }
+    .action-button, .gemini-button { width: 36px; height: 36px; }
+    .emoji-picker { width: 250px; height: 250px; right: 10px; bottom: 60px; }
 }
 
-.news-item h2 {
-    margin-top: 0;
-    color: var(--cor-azul-escuro);
+/* ================== OUTROS DETALHES ================== */
+/* (Mantenha o restante do seu CSS original igual, se necessário) */
+
+/* Google Sign-in */
+.google-signin-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 20px;
+    width: 100%;
     font-size: 16px;
+    font-weight: bold;
+    border: none;
+    background-color: #4285F4;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    justify-content: center;
+    transition: background-color var(--transicao-rapida);
+}
+.google-signin-btn:hover { background-color: #357ae8; }
+.google-signin-btn img { width: 20px; height: 20px; margin-right: 10px; }
+
+/* Exemplo para outros elementos com fundo */
+#identificacao-box,
+#identificacao-overlay {
+    background: var(--cor-container);
 }
 
-.news-item small {
-    color: var(--cor-azul-medio);
-    display: block;
-    margin-bottom: var(--espaco-sm);
-    font-size: 12px;
-}
+/* ... demais regras do seu CSS ... */
 
-/* Alertas de Notícias */
-.critical-alert {
-    border-left-color: var(--cor-erro);
-    background: rgba(255, 77, 77, 0.1);
-}
-
-.warning-alert {
-    border-left-color: var(--cor-alerta);
-    background: rgba(255, 152, 0, 0.1);
-}
-
-.info-alert {
-    border-left-color: var(--cor-info);
-    background: rgba(33, 150, 243, 0.1);
-}
-
-/* ================== ACESSIBILIDADE ================== */
+/* Foco acessível */
 :focus {
     outline: 2px solid var(--cor-foco);
     outline-offset: 2px;
 }
 
-/* ================== RESPONSIVO ================== */
-@media (max-width: 1200px) {
-    .app-wrapper {
-        grid-template-columns: 250px 1fr;
-    }
-    #news-panel {
-        display: none;
-    }
-}
-
-@media (max-width: 768px) {
-    .app-wrapper {
-        grid-template-columns: 1fr;
-        height: 100vh;
-    }
-    #sidebar {
-        display: none;
-    }
-    .panel {
-        padding: 0;
-    }
-    .message-container {
-        position: relative;
-    }
-    .copy-btn {
-        position: absolute;
-        top: 12px;
-        right: -40px;
-        background: var(--cor-container);
-        border: 1px solid var(--cor-borda);
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        color: var(--cor-texto-principal);
-        opacity: 0;
-        transform: scale(0.8);
-        transition: all var(--transicao-normal);
-    }
-    .message-container:hover .copy-btn {
-        opacity: 1;
-        transform: scale(1);
-        right: -16px;
-    }
-    .copy-btn:hover {
-        background-color: var(--cor-fundo);
-        transform: scale(1.1);
-    }
-    .copy-btn.copied {
-        color: var(--cor-sucesso);
-        transform: scale(1.1);
-    }
-    .avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 14px;
-    }
-    .message {
-        padding: var(--espaco-sm) var(--espaco-md);
-        font-size: 14px;
-    }
-    .input-area {
-        padding: var(--espaco-sm);
-    }
-    #user-input {
-        padding: var(--espaco-sm) var(--espaco-md);
-        font-size: 14px;
-    }
-    .action-button,
-    .gemini-button {
-        width: 36px;
-        height: 36px;
-    }
-    .emoji-picker {
-        width: 250px;
-        height: 250px;
-        right: 10px;
-        bottom: 60px;
-    }
-}
-
 /* ================== ANIMAÇÕES ================== */
 @keyframes typingAnimation {
-    0%,
-    60%,
-    100% {
-        transform: translateY(0);
-        opacity: 0.4;
-    }
-    30% {
-        transform: translateY(-5px);
-        opacity: 1;
-    }
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
 }
-
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes slideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
-
 @keyframes feedbackCopied {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }
-
 @keyframes confetti {
-    0% {
-        transform: translateY(0) rotate(0);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-100px) rotate(360deg);
-        opacity: 0;
-    }
+    0% { transform: translateY(0) rotate(0); opacity: 1; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
 }
-
 @keyframes pulse {
-    0% {
-        opacity: 0.6;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0.6;
-    }
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
 }
