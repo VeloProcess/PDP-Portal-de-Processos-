@@ -1,119 +1,56 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ================== CONFIGURAÇÕES ==================
-    // ⚠️ ATENÇÃO: Verifique se esta URL é a URL da sua ÚLTIMA implantação do Google Apps Script.
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbw5vSKBny4F720ohR2jVryxgOlUYieHIuWnloB7VhY-pmr-X5B2xqll2J7y02rW3ZwS/exec";
-    
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbw8n95lQr5-RbxG9qYG7O_3ZEOVkVQ3K50C3iFM9JViLyEsa8hiDuRuCzlgy_YPoI43/exec";
     const DOMINIO_PERMITIDO = "@velotax.com.br";
-    const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
     // ================== ELEMENTOS DO DOM ==================
     const identificacaoOverlay = document.getElementById('identificacao-overlay');
+    const identificacaoForm = document.getElementById('identificacao-form');
     const appWrapper = document.querySelector('.app-wrapper');
-    const errorMsg = document.getElementById('identificacao-error');
 
     // ================== VARIÁVEIS DE ESTADO ==================
     let ultimaPergunta = '';
+    let ultimaResposta = '';
     let ultimaLinhaDaFonte = null;
     let isTyping = false;
-    let dadosAtendente = null;
-    let tokenClient = null;
-
-    // ================== FUNÇÕES DE CONTROLE DE UI ==================
-    function showOverlay() {
-        identificacaoOverlay.classList.remove('hidden');
-        appWrapper.classList.add('hidden');
-    }
-    function hideOverlay() {
-        identificacaoOverlay.classList.add('hidden');
-        appWrapper.classList.remove('hidden');
-    }
 
     // ================== LÓGICA DE AUTENTICAÇÃO ==================
-    function waitForGoogleScript() {
-        return new Promise((resolve, reject) => {
-            const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-            if (!script) {
-                reject(new Error('Script Google Identity Services não encontrado no HTML.'));
-                return;
-            }
-            if (window.google && window.google.accounts) {
-                resolve(window.google.accounts);
-                return;
-            }
-            script.addEventListener('load', () => {
-                if (window.google && window.google.accounts) {
-                    resolve(window.google.accounts);
-                } else {
-                    reject(new Error('Falha ao carregar Google Identity Services.'));
-                }
-            });
-            script.addEventListener('error', () => {
-                reject(new Error('Erro ao carregar o script Google Identity Services.'));
-            });
-        });
-    }
-
-    function initGoogleSignIn() {
-        waitForGoogleScript().then(accounts => {
-            tokenClient = accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: 'profile email',
-                callback: handleGoogleSignIn
-            });
-            document.getElementById('google-signin-button').addEventListener('click', function() {
-                tokenClient.requestAccessToken();
-            });
-            verificarIdentificacao();
-        }).catch(error => {
-            errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
-            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
-        });
-    }
-
-    function handleGoogleSignIn(response) {
-        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: {
-                Authorization: `Bearer ${response.access_token}`
-            }
-        })
-        .then(res => res.json())
-        .then(user => {
-            const email = user.email;
-            if (email && email.endsWith(DOMINIO_PERMITIDO)) {
-                dadosAtendente = { nome: user.name, email: user.email, timestamp: Date.now() };
-                localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
-                hideOverlay();
-                iniciarBot(dadosAtendente);
-            } else {
-                errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-                errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
-            }
-        })
-        .catch(error => {
-            errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
-            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
-        });
-    }
-
     function verificarIdentificacao() {
         const umDiaEmMs = 24 * 60 * 60 * 1000;
         let dadosSalvos = null;
         try {
             const dadosSalvosString = localStorage.getItem('dadosAtendenteChatbot');
-            if (dadosSalvosString) {
-                dadosSalvos = JSON.parse(dadosSalvosString);
-            }
+            if (dadosSalvosString) dadosSalvos = JSON.parse(dadosSalvosString);
         } catch (e) {
             localStorage.removeItem('dadosAtendenteChatbot');
         }
-        if (dadosSalvos && dadosSalvos.email && dadosSalvos.email.endsWith(DOMINIO_PERMITIDO) && (Date.now() - dadosSalvos.timestamp < umDiaEmMs)) {
-            hideOverlay();
-            iniciarBot(dadosSalvos);
+
+        if (!dadosSalvos || (Date.now() - dadosSalvos.timestamp > umDiaEmMs) || !dadosSalvos.email.endsWith(DOMINIO_PERMITIDO)) {
+            identificacaoOverlay.style.display = 'flex';
+            appWrapper.style.visibility = 'hidden';
         } else {
-            localStorage.removeItem('dadosAtendenteChatbot');
-            showOverlay();
+            identificacaoOverlay.style.display = 'none';
+            appWrapper.style.visibility = 'visible';
+            iniciarBot(dadosSalvos);
         }
     }
+
+    identificacaoForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const nome = document.getElementById('nome-input').value.trim();
+        const email = document.getElementById('email-input').value.trim().toLowerCase();
+        const errorMsg = document.getElementById('identificacao-error');
+
+        if (nome && email && email.endsWith(DOMINIO_PERMITIDO)) {
+            const dadosAtendente = { nome, email, timestamp: Date.now() };
+            localStorage.setItem('dadosAtendenteChatbot', JSON.stringify(dadosAtendente));
+            identificacaoOverlay.style.display = 'none';
+            appWrapper.style.visibility = 'visible';
+            iniciarBot(dadosAtendente);
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    });
 
     // ================== FUNÇÃO PRINCIPAL DO BOT ==================
     function iniciarBot(dadosAtendente) {
@@ -124,30 +61,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const themeSwitcher = document.getElementById('theme-switcher');
         const body = document.body;
         const questionSearch = document.getElementById('question-search');
-        
-        document.getElementById('gemini-button').addEventListener('click', function() {
-            window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
-        });
+        const expandableHeader = document.getElementById('expandable-faq-header');
+        const moreQuestions = document.getElementById('more-questions');
+        const allQuestionItems = document.querySelectorAll('#quick-questions-list li, #more-questions-list li');
 
-        // Filtro de busca de perguntas
-        questionSearch.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
-            questions.forEach(question => {
-                const text = question.textContent.toLowerCase();
-                // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
-                question.classList.toggle('hidden', !text.includes(searchTerm));
-            });
-        });
+        // --- FUNÇÕES AUXILIARES ---
 
-        // Indicador de digitação
         function showTypingIndicator() {
             if (isTyping) return;
             isTyping = true;
             const typingContainer = document.createElement('div');
             typingContainer.className = 'message-container bot typing-indicator';
             typingContainer.id = 'typing-indicator';
-            typingContainer.innerHTML = `<div class="avatar bot">🤖</div><div class="message-content"><div class="message"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+            typingContainer.innerHTML = `
+                <div class="avatar bot">🤖</div>
+                <div class="message-content">
+                    <div class="message">
+                        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                    </div>
+                </div>`;
             chatBox.appendChild(typingContainer);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -157,43 +89,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const typingIndicator = document.getElementById('typing-indicator');
             if (typingIndicator) typingIndicator.remove();
         }
-
-        // Função para copiar texto para a área de transferência
+        
         async function copiarTextoParaClipboard(texto) {
-            try {
+             try {
                 await navigator.clipboard.writeText(texto);
                 return true;
             } catch (err) {
-                // Fallback para navegadores mais antigos
                 const textArea = document.createElement("textarea");
                 textArea.value = texto;
-                // CORRIGIDO (CSP): Usa classe em vez de estilo inline
-                textArea.className = 'clipboard-helper'; 
+                textArea.style.position = "fixed"; 
+                textArea.style.opacity = "0";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 try {
-                    document.execCommand('copy');
+                    const successful = document.execCommand('copy');
                     document.body.removeChild(textArea);
-                    return true;
+                    return successful;
                 } catch (fallbackErr) {
                     document.body.removeChild(textArea);
                     return false;
                 }
             }
         }
-
-        // Adicionar mensagem ao chat
+        
         function addMessage(message, sender, options = {}) {
             const { sourceRow = null } = options;
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container', sender);
+
             const avatarDiv = `<div class="avatar">${sender === 'user' ? '👤' : '🤖'}</div>`;
-            const messageContentDiv = `<div class="message-content"><div class="message">${message.replace(/\n/g, '<br>')}</div></div>`;
+            const messageContentDiv = `
+                <div class="message-content">
+                    <div class="message">${message.replace(/\n/g, '<br>')}</div>
+                </div>`;
+
             messageContainer.innerHTML = sender === 'user' ? messageContentDiv + avatarDiv : avatarDiv + messageContentDiv;
             chatBox.appendChild(messageContainer);
 
             if (sender === 'bot' && sourceRow) {
+                ultimaLinhaDaFonte = sourceRow;
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'copy-btn';
                 copyBtn.title = 'Copiar resposta';
@@ -222,11 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 positiveBtn.innerHTML = '👍';
                 positiveBtn.title = 'Resposta útil';
                 positiveBtn.onclick = () => enviarFeedback('logFeedbackPositivo', feedbackContainer);
+                
                 const negativeBtn = document.createElement('button');
                 negativeBtn.className = 'feedback-btn';
                 negativeBtn.innerHTML = '👎';
                 negativeBtn.title = 'Resposta incorreta';
                 negativeBtn.onclick = () => enviarFeedback('logFeedbackNegativo', feedbackContainer);
+                
                 feedbackContainer.appendChild(positiveBtn);
                 feedbackContainer.appendChild(negativeBtn);
                 messageContainer.querySelector('.message-content').appendChild(feedbackContainer);
@@ -234,17 +171,13 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Enviar feedback
         async function enviarFeedback(action, container) {
             if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
-            // CORRIGIDO (CSP): Usa classe em vez de estilo inline
-            container.textContent = 'Obrigado!';
-            container.className = 'feedback-thanks';
-
+            container.innerHTML = `<span style="font-size: 12px; color: var(--cor-texto-secundario);">Obrigado!</span>`;
             try {
                 await fetch(BACKEND_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'no-cors',
                     body: JSON.stringify({
                         action: action,
                         question: ultimaPergunta,
@@ -253,40 +186,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
             } catch (error) {
-                // Silenciar erro de feedback
+                console.error("Erro ao enviar feedback:", error);
             }
         }
 
-        // Buscar resposta do backend
         async function buscarResposta(textoDaPergunta) {
             ultimaPergunta = textoDaPergunta;
-            ultimaLinhaDaFonte = null;
             if (!textoDaPergunta.trim()) return;
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                const response = await fetch(url); // Removido o method/headers desnecessários para um GET simples
-                hideTypingIndicator();
-
-                if (!response.ok) {
-                    throw new Error(`Erro de rede ou CORS: ${response.status}`);
-                }
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Erro de rede: ${response.status}`);
                 const data = await response.json();
+                hideTypingIndicator();
                 
                 if (data.status === 'sucesso') {
-                    ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
                 } else {
-                    addMessage(data.mensagem || "Ocorreu um erro ao processar sua pergunta.", 'bot');
+                    addMessage(data.mensagem || "Ocorreu um erro.", 'bot');
                 }
             } catch (error) {
                 hideTypingIndicator();
-                addMessage("Erro de conexão. Verifique se a URL do Backend está correta e se o script foi reimplantado. Detalhes no console (F12).", 'bot');
+                addMessage("Erro de conexão. Verifique o console (F12).", 'bot');
                 console.error("Detalhes do erro de fetch:", error);
-            }
+ }
         }
 
-        // Enviar mensagem
         function handleSendMessage(text) {
             const trimmedText = text.trim();
             if (!trimmedText) return;
@@ -294,35 +220,43 @@ document.addEventListener('DOMContentLoaded', () => {
             buscarResposta(trimmedText);
             userInput.value = '';
         }
-
-        // Listeners de eventos
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSendMessage(userInput.value);
-            }
-        });
-        sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
         
-        document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
+        // --- INICIALIZAÇÃO E EVENT LISTENERS ---
+        
+        // Listeners para envio de mensagem
+        sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
+        userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(userInput.value); } });
+        
+        // Listener para todas as listas de perguntas
+        allQuestionItems.forEach(item => {
             item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
         });
         
-        document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
-            e.currentTarget.classList.toggle('expanded');
-            const moreQuestions = document.getElementById('more-questions');
-            // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
-            moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
-        });
-        
-        themeSwitcher.addEventListener('click', () => {
-            body.classList.toggle('dark-theme');
-            const isDark = body.classList.contains('dark-theme');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
+        // Listener para a busca na sidebar
+        questionSearch.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            allQuestionItems.forEach(question => {
+                const text = question.textContent.toLowerCase();
+                question.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
         });
 
-        // Configurar tema inicial
+        // ================== CÓDIGO CORRIGIDO PARA O BOTÃO "OUTRAS PERGUNTAS" ==================
+        expandableHeader.addEventListener('click', () => {
+            const arrow = expandableHeader.querySelector('.arrow');
+            const isExpanded = moreQuestions.style.display === 'block';
+
+            if (isExpanded) {
+                moreQuestions.style.display = 'none';
+                arrow.classList.remove('expanded');
+            } else {
+                moreQuestions.style.display = 'block';
+                arrow.classList.add('expanded');
+            }
+        });
+        // =================================================================================
+
+        // Lógica do Tema
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
@@ -333,13 +267,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 themeSwitcher.innerHTML = '☀️';
             }
         }
+        themeSwitcher.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const isDark = body.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
+        });
 
-        // Mensagem de boas-vindas
+        // Saudação inicial e tema
         const primeiroNome = dadosAtendente.nome.split(' ')[0];
-        addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
+        const hora = new Date().getHours();
+        let saudacao = (hora >= 5 && hora < 12) ? 'Bom dia' : (hora >= 12 && hora < 18) ? 'Boa tarde' : 'Boa noite';
+        addMessage(`${saudacao}, ${primeiroNome}! Como posso te ajudar?`, 'bot');
         setInitialTheme();
     }
-
-    // Inicia a aplicação
-    initGoogleSignIn();
+    
+    verificarIdentificacao();
 });
