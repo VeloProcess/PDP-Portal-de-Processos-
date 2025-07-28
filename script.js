@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado, iniciando script.js às 02:12 PM -03, 28/07/2025');
+    console.log('DOM carregado, iniciando script.js às 02:18 PM -03, 28/07/2025');
     
     // ================== CONFIGURAÇÕES ==================
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTyping = false;
     let dadosAtendente = null;
     let tokenClient = null;
-    let lastMessageTimestamp = 0; // Controle de duplicação por tempo
-    let isSendingMessage = false; // Controle para debounce de mensagens do usuário
-    let isBotInitialized = false; // Controle para inicialização única do bot
-    let welcomeMessageSent = false; // Controle para mensagem de boas-vindas
-    let isFetchingResponse = false; // Controle para requisições ao backend
+    let lastMessageTimestamp = 0;
+    let isSendingMessage = false;
+    let isBotInitialized = false;
+    let welcomeMessageSent = false;
+    let isFetchingResponse = false;
 
     // ================== FUNÇÕES DE CONTROLE DE UI ==================
     function showOverlay() {
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Erro ao verificar login:', error);
             errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
             errorMsg.classList.remove('hidden');
-            localStorage.removeItem('dadosAtendenteChatbot'); // Limpa localStorage em caso de erro
+            localStorage.removeItem('dadosAtendenteChatbot');
         });
     }
 
@@ -242,14 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adicionar mensagem ao chat
         function addMessage(message, sender, options = {}) {
             const currentTime = Date.now();
-            // Evita mensagens duplicadas
             const lastMessage = chatBox.querySelector('.message-container:last-child .message')?.textContent;
             const lastSender = chatBox.querySelector('.message-container:last-child')?.classList.contains(sender);
             if (lastMessage === message && lastSender && (currentTime - lastMessageTimestamp < 1000)) {
                 console.warn('Mensagem duplicada ignorada:', { message, sender, timeDiff: currentTime - lastMessageTimestamp });
                 return;
             }
-            // Evita duplicação da mensagem de boas-vindas
             if (sender === 'bot' && message.startsWith('Olá,') && welcomeMessageSent) {
                 console.warn('Mensagem de boas-vindas duplicada ignorada:', message);
                 return;
@@ -366,7 +364,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Remove formulário existente
             const existingForm = document.querySelector('.feedback-form-container');
             if (existingForm) {
                 console.warn('Formulário de feedback já existe, removendo o anterior');
@@ -435,6 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
+                console.log('URL da requisição:', url);
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
@@ -442,7 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     credentials: 'omit'
                 });
                 if (!response.ok) {
-                    throw new Error(`Erro de rede: ${response.status} ${response.statusText}`);
+                    const errorText = await response.text();
+                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${errorText}`);
                 }
                 const data = await response.json();
                 console.log('Resposta do backend:', data);
@@ -450,11 +449,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
                 } else {
+                    console.error('Erro na resposta do backend:', data);
                     addMessage(data.mensagem || 'Ocorreu um erro ao processar sua pergunta.', 'bot');
                 }
             } catch (error) {
                 console.error('Erro ao buscar resposta:', error);
-                addMessage(`Erro ao buscar resposta: ${error.message}. Verifique sua conexão.`, 'bot');
+                let errorMessage = 'Erro ao buscar resposta. Verifique sua conexão.';
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Falha na conexão com o servidor. Verifique a URL do backend ou a configuração de CORS.';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage = 'Erro de CORS. Verifique a configuração do Google Apps Script.';
+                }
+                addMessage(errorMessage, 'bot');
             } finally {
                 hideTypingIndicator();
                 isFetchingResponse = false;
@@ -480,12 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.value = '';
             setTimeout(() => {
                 isSendingMessage = false;
-            }, 500); // Debounce de 500ms
+            }, 500);
         }
 
         // Configurar eventos
         function configurarEventos() {
-            // Remove listeners antigos
             userInput.removeEventListener('keydown', handleSendInput);
             sendButton.removeEventListener('click', handleSendClick);
 
@@ -502,17 +507,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleSendMessage(userInput.value);
             }
 
-            // Adiciona novos listeners
             userInput.addEventListener('keydown', handleSendInput);
             sendButton.addEventListener('click', handleSendClick);
 
-            // Perguntas rápidas
             const questionLists = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
             if (questionLists.length === 0) {
                 console.warn('Nenhuma pergunta rápida encontrada');
             }
             questionLists.forEach(item => {
-                // Remove listeners antigos
                 const newItem = item.cloneNode(true);
                 item.parentNode.replaceChild(newItem, item);
                 newItem.addEventListener('click', (e) => {
@@ -522,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Expandir/recolher FAQ
             const expandableFaqHeader = document.getElementById('expandable-faq-header');
             if (expandableFaqHeader) {
                 expandableFaqHeader.addEventListener('click', (e) => {
@@ -539,7 +540,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn('Elemento #expandable-faq-header não encontrado');
             }
 
-            // Alternar tema
             themeSwitcher.addEventListener('click', () => {
                 console.log('Alternando tema');
                 document.body.classList.toggle('dark-theme');
@@ -562,7 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Tema inicial configurado:', savedTheme || 'light');
         }
 
-        // Mensagem de boas-vindas
         if (!welcomeMessageSent) {
             const primeiroNome = dadosAtendente.nome ? dadosAtendente.nome.split(' ')[0] : 'Usuário';
             console.log('Exibindo mensagem de boas-vindas para:', primeiroNome);
@@ -573,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
         configurarEventos();
     }
 
-    // Inicia a aplicação
     console.log('Iniciando aplicação');
     initGoogleSignIn();
-}, { once: true }); // Garante que o DOMContentLoaded seja registrado apenas uma vez
+}, { once: true });
