@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado, iniciando script.js às 02:27 PM -03, 28/07/2025');
+    console.log('DOM carregado, iniciando script.js às 02:36 PM -03, 28/07/2025');
     
     // ================== CONFIGURAÇÕES ==================
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwEtOj37nlzcX3hHB0KqIjz8xAPt0wGke_6IHmQSlsk_2aPg_0GgEkXkE8ZuqRhIswy/exec";
@@ -352,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error(`Erro ao enviar feedback ${tipo}:`, error);
-                addMessage(`Erro ao enviar feedback ${tipo}: ${error.message}. Verifique sua conexão.`, 'bot');
+                addMessage(`Erro ao enviar feedback ${tipo}: ${error.message}. Verifique sua conexão ou a configuração do backend.`, 'bot');
             }
         }
 
@@ -452,7 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const connectivity = await testServerConnectivity(BACKEND_URL);
             if (!connectivity.ok && connectivity.status !== null) {
                 console.error('Servidor retornou erro:', connectivity);
-                addMessage(`Erro: Servidor retornou status ${connectivity.status}. Verifique a implantação do Google Apps Script.`, 'bot');
+                let errorMessage = `Erro: Servidor retornou status ${connectivity.status} (${connectivity.statusText}). `;
+                if (connectivity.status === 403) {
+                    errorMessage += 'A implantação do Google Apps Script está restrita. Configure para "Executar como: Eu" e "Quem pode acessar: Qualquer pessoa".';
+                } else {
+                    errorMessage += 'Verifique a implantação do Google Apps Script.';
+                }
+                addMessage(errorMessage, 'bot');
                 hideTypingIndicator();
                 isFetchingResponse = false;
                 return;
@@ -490,23 +496,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Erro ao buscar resposta:', error);
                 let errorMessage = 'Erro ao buscar resposta. Verifique sua conexão.';
                 if (error.message.includes('Failed to fetch') || error.message.includes('net::ERR_FAILED')) {
-                    errorMessage = 'Falha na conexão com o servidor. Verifique a URL do backend ou a configuração de CORS.';
-                    // Tentar fallback com mode: 'no-cors'
-                    console.log('Tentando requisição com mode: no-cors');
-                    try {
-                        const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                        const fallbackResponse = await fetch(url, {
-                            method: 'GET',
-                            mode: 'no-cors'
-                        });
-                        console.log('Resposta no-cors:', fallbackResponse);
-                        errorMessage = 'Requisição enviada, mas não foi possível verificar a resposta devido a restrições de CORS. Verifique a implantação do Google Apps Script.';
-                    } catch (fallbackError) {
-                        console.error('Erro no fallback no-cors:', fallbackError);
-                        errorMessage = 'Falha total na conexão com o servidor. Tente outra rede ou verifique a implantação do Google Apps Script.';
-                    }
+                    errorMessage = 'Falha na conexão com o servidor devido a erro CORS ou permissões. Acesse a URL do backend diretamente no navegador e verifique a implantação do Google Apps Script para "Qualquer pessoa".';
                 } else if (error.message.includes('CORS')) {
-                    errorMessage = 'Erro de CORS. Acesse a URL do backend diretamente no navegador para verificar a configuração.';
+                    errorMessage = 'Erro de CORS: O servidor não permite requisições de https://veloprocess.github.io. Configure o Google Apps Script para acesso público.';
+                } else if (error.message.includes('403')) {
+                    errorMessage = 'Erro 403: Acesso negado pelo servidor. Configure a implantação do Google Apps Script para "Executar como: Eu" e "Quem pode acessar: Qualquer pessoa".';
                 }
                 addMessage(errorMessage, 'bot');
             } finally {
