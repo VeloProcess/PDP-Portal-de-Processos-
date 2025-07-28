@@ -10,6 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const identificacaoOverlay = document.getElementById('identificacao-overlay');
     const appWrapper = document.querySelector('.app-wrapper');
     const errorMsg = document.getElementById('identificacao-error');
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const themeSwitcher = document.getElementById('theme-switcher');
+    const questionSearch = document.getElementById('question-search');
+    const feedbackOverlay = document.getElementById('feedback-overlay');
+    const feedbackForm = document.getElementById('feedback-form');
+    const feedbackComment = document.getElementById('feedback-comment');
+    const feedbackCancel = document.getElementById('feedback-cancel');
+    const feedbackSend = document.getElementById('feedback-send');
 
     // ================== VARIÁVEIS DE ESTADO ==================
     let ultimaPergunta = '';
@@ -26,6 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideOverlay() {
         identificacaoOverlay.classList.add('hidden');
         appWrapper.classList.remove('hidden');
+    }
+    function showFeedbackOverlay() {
+        feedbackOverlay.classList.remove('hidden');
+        feedbackComment.focus();
+    }
+    function hideFeedbackOverlay() {
+        feedbackOverlay.classList.add('hidden');
+        feedbackComment.value = '';
     }
 
     // ================== LÓGICA DE AUTENTICAÇÃO ==================
@@ -66,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             verificarIdentificacao();
         }).catch(error => {
             errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
-            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
+            errorMsg.classList.remove('hidden');
         });
     }
 
@@ -86,12 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 iniciarBot(dadosAtendente);
             } else {
                 errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-                errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
+                errorMsg.classList.remove('hidden');
             }
         })
         .catch(error => {
             errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
-            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
+            errorMsg.classList.remove('hidden');
         });
     }
 
@@ -117,14 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ================== FUNÇÃO PRINCIPAL DO BOT ==================
     function iniciarBot(dadosAtendente) {
-        // Elementos do DOM do bot
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const themeSwitcher = document.getElementById('theme-switcher');
-        const body = document.body;
-        const questionSearch = document.getElementById('question-search');
-        
+        // Abrir Gemini em nova aba
         document.getElementById('gemini-button').addEventListener('click', function() {
             window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
         });
@@ -135,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
             questions.forEach(question => {
                 const text = question.textContent.toLowerCase();
-                // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
                 question.classList.toggle('hidden', !text.includes(searchTerm));
             });
         });
@@ -164,11 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 await navigator.clipboard.writeText(texto);
                 return true;
             } catch (err) {
-                // Fallback para navegadores mais antigos
                 const textArea = document.createElement("textarea");
                 textArea.value = texto;
-                // CORRIGIDO (CSP): Usa classe em vez de estilo inline
-                textArea.className = 'clipboard-helper'; 
+                textArea.className = 'clipboard-helper';
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
@@ -189,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container', sender);
             const avatarDiv = `<div class="avatar">${sender === 'user' ? '👤' : '🤖'}</div>`;
-            const messageContentDiv = `<div class="message-content"><div class="message">${message.replace(/\n/g, '<br>')}</div></div>`;
+            const messageContentDiv = `<div class="message-content"><div class="message bot-msg">${message.replace(/\n/g, '<br>')}</div></div>`;
             messageContainer.innerHTML = sender === 'user' ? messageContentDiv + avatarDiv : avatarDiv + messageContentDiv;
             chatBox.appendChild(messageContainer);
 
@@ -213,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 };
-                messageContainer.appendChild(copyBtn);
+                messageContainer.querySelector('.message').appendChild(copyBtn);
 
                 const feedbackContainer = document.createElement('div');
                 feedbackContainer.className = 'feedback-container';
@@ -221,12 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 positiveBtn.className = 'feedback-btn';
                 positiveBtn.innerHTML = '👍';
                 positiveBtn.title = 'Resposta útil';
-                positiveBtn.onclick = () => enviarFeedback('logFeedbackPositivo', feedbackContainer);
+                positiveBtn.onclick = () => enviarFeedbackPositivo(feedbackContainer);
                 const negativeBtn = document.createElement('button');
                 negativeBtn.className = 'feedback-btn';
                 negativeBtn.innerHTML = '👎';
                 negativeBtn.title = 'Resposta incorreta';
-                negativeBtn.onclick = () => enviarFeedback('logFeedbackNegativo', feedbackContainer);
+                negativeBtn.onclick = () => abrirFeedbackNegativo(feedbackContainer);
                 feedbackContainer.appendChild(positiveBtn);
                 feedbackContainer.appendChild(negativeBtn);
                 messageContainer.querySelector('.message-content').appendChild(feedbackContainer);
@@ -234,28 +242,75 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Enviar feedback
-        async function enviarFeedback(action, container) {
-            if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
-            // CORRIGIDO (CSP): Usa classe em vez de estilo inline
+        // Enviar feedback positivo
+        async function enviarFeedbackPositivo(container) {
+            if (!ultimaPergunta) return;
             container.textContent = 'Obrigado!';
             container.className = 'feedback-thanks';
 
             try {
-                await fetch(BACKEND_URL, {
+                const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: action,
+                        action: 'logFeedbackPositivo',
                         question: ultimaPergunta,
-                        sourceRow: ultimaLinhaDaFonte,
                         email: dadosAtendente.email
                     })
                 });
+                const data = await response.json();
+                if (data.status === 'feedback_positivo_recebido') {
+                    addMessage('Feedback positivo registrado com sucesso!', 'bot');
+                } else {
+                    addMessage('Erro ao registrar feedback positivo: ' + data.mensagem, 'bot');
+                }
             } catch (error) {
-                // Silenciar erro de feedback
+                addMessage('Erro ao enviar feedback positivo. Verifique sua conexão.', 'bot');
+                console.error('Erro ao enviar feedback positivo:', error);
             }
         }
+
+        // Abrir overlay de feedback negativo
+        function abrirFeedbackNegativo(container) {
+            showFeedbackOverlay();
+            feedbackForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const sugestao = feedbackComment.value.trim();
+                if (!sugestao) {
+                    alert('Por favor, insira uma sugestão.');
+                    return;
+                }
+                container.textContent = 'Obrigado!';
+                container.className = 'feedback-thanks';
+
+                try {
+                    const response = await fetch(BACKEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'logFeedbackNegativo',
+                            question: ultimaPergunta,
+                            sourceRow: ultimaLinhaDaFonte,
+                            email: dadosAtendente.email,
+                            sugestao: sugestao
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'feedback_negativo_recebido') {
+                        addMessage('Feedback negativo registrado com sucesso!', 'bot');
+                    } else {
+                        addMessage('Erro ao registrar feedback negativo: ' + data.mensagem, 'bot');
+                    }
+                } catch (error) {
+                    addMessage('Erro ao enviar feedback negativo. Verifique sua conexão.', 'bot');
+                    console.error('Erro ao enviar feedback negativo:', error);
+                }
+                hideFeedbackOverlay();
+            };
+        }
+
+        // Fechar overlay de feedback negativo
+        feedbackCancel.onclick = hideFeedbackOverlay;
 
         // Buscar resposta do backend
         async function buscarResposta(textoDaPergunta) {
@@ -265,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                const response = await fetch(url); // Removido o method/headers desnecessários para um GET simples
+                const response = await fetch(url);
                 hideTypingIndicator();
 
                 if (!response.ok) {
@@ -311,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
             const moreQuestions = document.getElementById('more-questions');
-            // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
             moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
         });
         
