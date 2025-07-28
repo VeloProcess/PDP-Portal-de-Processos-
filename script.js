@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
             } catch (error) {
-                // Silenciar erro de feedback
+                console.error("Erro ao enviar feedback:", error);
             }
         }
 
@@ -264,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
+                console.log("Tentando fetch para:", url); // Log para debug
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
@@ -285,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 hideTypingIndicator();
                 addMessage(`Erro ao conectar ao servidor: ${error.message}. Verifique a URL do backend e sua conexão.`, 'bot');
-                console.error("Detalhes do erro de fetch:", error);
+                console.error("Detalhes do erro de fetch:", error, "URL:", url);
             }
         }
 
