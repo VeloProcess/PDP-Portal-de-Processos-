@@ -8,7 +8,7 @@
         style-src 'self' 'sha256-o6XOSHN2IRGpcLf0WEkpEt2E6cHgNUkH0NUfAsEiivU=';
         script-src 'self' https://accounts.google.com;
         connect-src 'self' https://www.googleapis.com https://script.google.com https://script.googleapis.com;
-        img-src 'self' https://github.com;
+        img-src 'self' https://github.com https://raw.githubusercontent.com;
     ">
     <title>Painel Interno com ChatBot</title>
     <link rel="stylesheet" href="style.css">
@@ -18,11 +18,11 @@
     <div id="identificacao-overlay">
         <div id="identificacao-box">
             <h2>Bem-vindo(a) ao Painel</h2>
-            <p>Por favor, faça login com sua conta Google corporativa (@velotax.com.br).</p>
+            <p>Por favor, faça login com sua conta Google corporativa .</p>
             <div>
                 <button id="google-signin-button">Entrar com Google</button>
             </div>
-            <p id="identificacao-error" class="hidden">Acesso permitido apenas para e-mails @velotax.com.br!</p>
+            <p id="identificacao-error" class="hidden">Acesso permitido apenas para e-mails corporativos!</p>
         </div>
     </div>
 
@@ -72,7 +72,7 @@
 
         <div id="chat-panel" class="panel">
             <div class="chat-header">
-                <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed.png?raw=true" alt="Logo" class="chat-logo">
+                <img src="https://raw.githubusercontent.com/VeloProcess/PDP-Portal-de-Processos-/refs/heads/main/unnamed.png" alt="Logo" class="chat-logo">
                 <h1 class="chat-title">Assistente Virtual <span class="status-indicator"></span></h1>
                 <p>Seu assistente para processos internos</p>
                 <button id="theme-switcher" title="Alternar tema">☀️</button>
