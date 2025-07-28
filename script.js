@@ -324,6 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Verifica se já existe um formulário no chat
+    const existingForm = document.querySelector('.feedback-form-container');
+    if (existingForm) {
+        console.warn('Formulário de feedback já existe, removendo o anterior');
+        existingForm.remove();
+    }
+
     console.log('Adicionando formulário de feedback no chat');
     const feedbackFormHtml = `
         <div class="feedback-form-container">
