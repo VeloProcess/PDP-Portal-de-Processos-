@@ -15,11 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendButton = document.getElementById('send-button');
     const themeSwitcher = document.getElementById('theme-switcher');
     const questionSearch = document.getElementById('question-search');
-    const feedbackOverlay = document.getElementById('feedback-overlay');
-    const feedbackForm = document.getElementById('feedback-form');
-    const feedbackComment = document.getElementById('feedback-comment');
-    const feedbackCancel = document.getElementById('feedback-cancel');
-    const feedbackSend = document.getElementById('feedback-send');
 
     // Verificar existência dos elementos
     if (!chatBox || !userInput || !sendButton || !identificacaoOverlay || !appWrapper) {
@@ -34,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTyping = false;
     let dadosAtendente = null;
     let tokenClient = null;
+    let isSendingMessage = false; // Controle para debounce
 
     // ================== FUNÇÕES DE CONTROLE DE UI ==================
     function showOverlay() {
@@ -46,18 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Ocultando overlay de identificação');
         identificacaoOverlay.classList.add('hidden');
         appWrapper.classList.remove('hidden');
-    }
-
-    function showFeedbackOverlay() {
-        console.log('Exibindo overlay de feedback');
-        feedbackOverlay.classList.remove('hidden');
-        feedbackComment.focus();
-    }
-
-    function hideFeedbackOverlay() {
-        console.log('Ocultando overlay de feedback');
-        feedbackOverlay.classList.add('hidden');
-        feedbackComment.value = '';
     }
 
     // ================== LÓGICA DE AUTENTICAÇÃO ==================
@@ -95,10 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 scope: 'profile email',
                 callback: handleGoogleSignIn
             });
-            document.getElementById('google-signin-button').addEventListener('click', () => {
-                console.log('Botão de login Google clicado');
-                tokenClient.requestAccessToken();
-            });
+            const signinButton = document.getElementById('google-signin-button');
+            if (signinButton) {
+                signinButton.addEventListener('click', () => {
+                    console.log('Botão de login Google clicado');
+                    tokenClient.requestAccessToken();
+                });
+            }
             verificarIdentificacao();
         }).catch(error => {
             console.error('Erro ao inicializar Google Sign-In:', error);
@@ -165,10 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Iniciando bot para:', dadosAtendente.email);
 
         // Abrir Gemini em nova aba
-        document.getElementById('gemini-button').addEventListener('click', () => {
-            console.log('Abrindo Gemini em nova aba');
-            window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
-        });
+        const geminiButton = document.getElementById('gemini-button');
+        if (geminiButton) {
+            geminiButton.addEventListener('click', () => {
+                console.log('Abrindo Gemini em nova aba');
+                window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
+            });
+        }
 
         // Filtro de busca de perguntas
         questionSearch.addEventListener('input', (e) => {
@@ -228,80 +218,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Adicionar mensagem ao chat
-       function addMessage(message, sender, options = {}) {
-    // Evita mensagens duplicadas idênticas
-    const lastMessage = chatBox.querySelector('.message-container:last-child .message')?.textContent;
-    if (lastMessage === message) {
-        console.warn('Mensagem duplicada ignorada:', message);
-        return;
-    }
-
-    const messageContainer = document.createElement('div');
-    messageContainer.className = `message-container ${sender}`;
-    const avatar = document.createElement('span');
-    avatar.className = `avatar ${sender}`;
-    avatar.textContent = sender === 'user' ? '👤' : '🤖';
-    const messageContent = document.createElement('div');
-    messageContent.className = 'message-content';
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message';
-    messageElement.textContent = message;
-    messageContent.appendChild(messageElement);
-
-    if (sender === 'bot' && !options.isTyping && !options.isFeedback) {
-        const feedbackContainer = document.createElement('div');
-        feedbackContainer.className = 'feedback-container';
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'copy-btn';
-        copyBtn.innerHTML = '📋';
-        copyBtn.onclick = () => {
-            const textToCopy = messageElement.textContent;
-            console.log('Copiando texto:', textToCopy);
-            copiarTextoParaClipboard(textToCopy).then(success => {
-                if (success) {
-                    copyBtn.innerHTML = '✅';
-                    copyBtn.classList.add('copied');
-                    setTimeout(() => {
-                        copyBtn.innerHTML = '📋';
-                        copyBtn.classList.remove('copied');
-                    }, 2000);
-                } else {
-                    alert('Não foi possível copiar o texto.');
-                }
-            });
-        };
-        const positiveFeedback = document.createElement('button');
-        positiveFeedback.className = 'feedback-btn positive emoji-icon';
-        positiveFeedback.innerHTML = '👍';
-        positiveFeedback.onclick = () => {
-            console.log('Feedback positivo registrado');
-            feedbackContainer.textContent = 'Obrigado!';
-            feedbackContainer.className = 'feedback-thanks';
-            enviarFeedback('positivo', messageContainer);
-        };
-        const negativeFeedback = document.createElement('button');
-        negativeFeedback.className = 'feedback-btn negative emoji-icon';
-        negativeFeedback.innerHTML = '👎';
-        negativeFeedback.onclick = () => {
-            console.log('Abrindo formulário de feedback negativo');
-            abrirFeedbackNegativo(feedbackContainer);
-        };
-        feedbackContainer.append(copyBtn, positiveFeedback, negativeFeedback);
-        messageContent.appendChild(feedbackContainer);
-    }
-
-    messageContainer.append(avatar, messageContent);
-    chatBox.appendChild(messageContainer);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-        // Enviar feedback positivo
-        async function enviarFeedbackPositivo(container) {
-            if (!ultimaPergunta) {
-                console.warn('Nenhuma pergunta para feedback positivo');
+        function addMessage(message, sender, options = {}) {
+            // Evita mensagens duplicadas
+            const lastMessage = chatBox.querySelector('.message-container:last-child .message')?.textContent;
+            const lastSender = chatBox.querySelector('.message-container:last-child')?.classList.contains(sender);
+            if (lastMessage === message && lastSender) {
+                console.warn('Mensagem duplicada ignorada:', message);
                 return;
             }
-            console.log('Enviando feedback positivo:', ultimaPergunta);
+
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `message-container ${sender}`;
+            const avatar = document.createElement('span');
+            avatar.className = `avatar ${sender}`;
+            avatar.textContent = sender === 'user' ? '👤' : '🤖';
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = message;
+            messageContent.appendChild(messageElement);
+
+            if (sender === 'bot' && !options.isTyping && !options.isFeedback) {
+                const feedbackContainer = document.createElement('div');
+                feedbackContainer.className = 'feedback-container';
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = '📋';
+                copyBtn.onclick = () => {
+                    const textToCopy = messageElement.textContent;
+                    console.log('Copiando texto:', textToCopy);
+                    copiarTextoParaClipboard(textToCopy).then(success => {
+                        if (success) {
+                            copyBtn.innerHTML = '✅';
+                            copyBtn.classList.add('copied');
+                            setTimeout(() => {
+                                copyBtn.innerHTML = '📋';
+                                copyBtn.classList.remove('copied');
+                            }, 2000);
+                        } else {
+                            alert('Não foi possível copiar o texto.');
+                        }
+                    });
+                };
+                const positiveFeedback = document.createElement('button');
+                positiveFeedback.className = 'feedback-btn positive emoji-icon';
+                positiveFeedback.innerHTML = '👍';
+                positiveFeedback.onclick = () => {
+                    console.log('Feedback positivo registrado');
+                    feedbackContainer.textContent = 'Obrigado!';
+                    feedbackContainer.className = 'feedback-thanks';
+                    enviarFeedback('positivo', messageContainer);
+                };
+                const negativeFeedback = document.createElement('button');
+                negativeFeedback.className = 'feedback-btn negative emoji-icon';
+                negativeFeedback.innerHTML = '👎';
+                negativeFeedback.onclick = () => {
+                    console.log('Abrindo formulário de feedback negativo');
+                    abrirFeedbackNegativo(feedbackContainer);
+                };
+                feedbackContainer.append(copyBtn, positiveFeedback, negativeFeedback);
+                messageContent.appendChild(feedbackContainer);
+            }
+
+            messageContainer.append(avatar, messageContent);
+            chatBox.appendChild(messageContainer);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Enviar feedback positivo
+        async function enviarFeedback(tipo, container) {
+            if (!ultimaPergunta) {
+                console.warn('Nenhuma pergunta para feedback');
+                return;
+            }
+            console.log(`Enviando feedback ${tipo}:`, ultimaPergunta);
             container.textContent = 'Obrigado!';
             container.className = 'feedback-thanks';
 
@@ -309,112 +300,122 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    credentials: 'omit',
                     body: JSON.stringify({
-                        action: 'logFeedbackPositivo',
+                        action: tipo === 'positivo' ? 'logFeedbackPositivo' : 'logFeedbackNegativo',
                         question: ultimaPergunta,
-                        email: dadosAtendente.email
+                        sourceRow: ultimaLinhaDaFonte,
+                        email: dadosAtendente.email,
+                        sugestao: tipo === 'negativo' ? feedbackComment?.value : undefined
                     })
                 });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${errorText}`);
+                }
                 const data = await response.json();
-                console.log('Resposta do feedback positivo:', data);
-                if (data.status === 'feedback_positivo_recebido') {
-                    addMessage('Feedback positivo registrado com sucesso!', 'bot');
+                console.log(`Resposta do feedback ${tipo}:`, data);
+                if (data.status === `${tipo}_feedback_recebido`) {
+                    addMessage(`Feedback ${tipo} registrado com sucesso!`, 'bot');
                 } else {
-                    addMessage('Erro ao registrar feedback positivo: ' + data.mensagem, 'bot');
+                    console.error(`Resposta inválida do backend para feedback ${tipo}:`, data);
+                    addMessage(`Erro ao registrar feedback ${tipo}: ${data.mensagem || 'Resposta inválida do servidor'}`, 'bot');
                 }
             } catch (error) {
-                console.error('Erro ao enviar feedback positivo:', error);
-                addMessage('Erro ao enviar feedback positivo. Verifique sua conexão.', 'bot');
+                console.error(`Erro ao enviar feedback ${tipo}:`, error);
+                addMessage(`Erro ao enviar feedback ${tipo}: ${error.message}. Verifique sua conexão.`, 'bot');
             }
         }
 
-        // Abrir overlay de feedback negativo
+        // Abrir formulário de feedback negativo no chat
         function abrirFeedbackNegativo(container) {
-    if (!ultimaPergunta || !dadosAtendente || !dadosAtendente.email) {
-        console.error('Dados necessários para feedback ausentes:', { ultimaPergunta, dadosAtendente });
-        addMessage('Erro: Não foi possível enviar o feedback. Tente novamente após enviar uma pergunta.', 'bot');
-        return;
-    }
+            if (!ultimaPergunta || !dadosAtendente || !dadosAtendente.email) {
+                console.error('Dados necessários para feedback ausentes:', { ultimaPergunta, dadosAtendente });
+                addMessage('Erro: Não foi possível enviar o feedback. Tente novamente após enviar uma pergunta.', 'bot');
+                return;
+            }
 
-    // Verifica se já existe um formulário no chat
-    const existingForm = document.querySelector('.feedback-form-container');
-    if (existingForm) {
-        console.warn('Formulário de feedback já existe, removendo o anterior');
-        existingForm.remove();
-    }
+            // Remove formulário existente
+            const existingForm = document.querySelector('.feedback-form-container');
+            if (existingForm) {
+                console.warn('Formulário de feedback já existe, removendo o anterior');
+                existingForm.remove();
+            }
 
-    console.log('Adicionando formulário de feedback no chat');
-    const feedbackFormHtml = `
-        <div class="feedback-form-container">
-            <div class="feedback-form">
-                <h3>Feedback</h3>
-                <textarea class="feedback-comment" placeholder="Digite sua sugestão" rows="4"></textarea>
-                <div class="feedback-button-container">
-                    <button type="button" class="feedback-cancel">Cancelar</button>
-                    <button type="submit" class="feedback-send">Enviar Feedback</button>
+            console.log('Adicionando formulário de feedback no chat');
+            const feedbackFormHtml = `
+                <div class="feedback-form-container">
+                    <div class="feedback-form">
+                        <h3>Feedback</h3>
+                        <textarea class="feedback-comment" placeholder="Digite sua sugestão" rows="4"></textarea>
+                        <div class="feedback-button-container">
+                            <button type="button" class="feedback-cancel">Cancelar</button>
+                            <button type="submit" class="feedback-send">Enviar Feedback</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    `;
-    const feedbackContainer = document.createElement('div');
-    feedbackContainer.innerHTML = feedbackFormHtml;
-    chatBox.appendChild(feedbackContainer);
-    chatBox.scrollTop = chatBox.scrollHeight;
+            `;
+            const feedbackContainer = document.createElement('div');
+            feedbackContainer.innerHTML = feedbackFormHtml;
+            chatBox.appendChild(feedbackContainer);
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-    const feedbackForm = feedbackContainer.querySelector('.feedback-form');
-    const feedbackComment = feedbackContainer.querySelector('.feedback-comment');
-    const feedbackCancel = feedbackContainer.querySelector('.feedback-cancel');
-    const feedbackSend = feedbackContainer.querySelector('.feedback-send');
+            const feedbackForm = feedbackContainer.querySelector('.feedback-form');
+            const feedbackComment = feedbackContainer.querySelector('.feedback-comment');
+            const feedbackCancel = feedbackContainer.querySelector('.feedback-cancel');
+            const feedbackSend = feedbackContainer.querySelector('.feedback-send');
 
-    feedbackForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const sugestao = feedbackComment.value.trim();
-        if (!sugestao) {
-            console.warn('Sugestão vazia no feedback negativo');
-            alert('Por favor, insira uma sugestão.');
-            return;
+            feedbackForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const sugestao = feedbackComment.value.trim();
+                if (!sugestao) {
+                    console.warn('Sugestão vazia no feedback negativo');
+                    alert('Por favor, insira uma sugestão.');
+                    return;
+                }
+                console.log('Enviando feedback negativo:', { pergunta: ultimaPergunta, sourceRow: ultimaLinhaDaFonte, email: dadosAtendente.email, sugestao });
+                container.textContent = 'Obrigado!';
+                container.className = 'feedback-thanks';
+                try {
+                    const response = await fetch(BACKEND_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        mode: 'cors',
+                        credentials: 'omit',
+                        body: JSON.stringify({
+                            action: 'logFeedbackNegativo',
+                            question: ultimaPergunta,
+                            sourceRow: ultimaLinhaDaFonte,
+                            email: dadosAtendente.email,
+                            sugestao: sugestao
+                        })
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+                    const data = await response.json();
+                    console.log('Resposta do feedback negativo:', data);
+                    if (data.status === 'feedback_negativo_recebido') {
+                        addMessage('Feedback negativo registrado com sucesso!', 'bot');
+                    } else {
+                        console.error('Resposta inválida do backend:', data);
+                        addMessage('Erro ao registrar feedback negativo: ' + (data.mensagem || 'Resposta inválida do servidor'), 'bot');
+                    }
+                } catch (error) {
+                    console.error('Erro ao enviar feedback negativo:', error);
+                    addMessage(`Erro ao enviar feedback negativo: ${error.message}. Verifique sua conexão ou tente novamente.`, 'bot');
+                }
+                feedbackContainer.remove();
+            };
+
+            feedbackCancel.onclick = () => {
+                console.log('Cancelando feedback negativo');
+                feedbackContainer.remove();
+            };
         }
-        console.log('Enviando feedback negativo:', { pergunta: ultimaPergunta, sourceRow: ultimaLinhaDaFonte, email: dadosAtendente.email, sugestao });
-        container.textContent = 'Obrigado!';
-        container.className = 'feedback-thanks';
-        try {
-            const response = await fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                mode: 'cors',
-                credentials: 'omit',
-                body: JSON.stringify({
-                    action: 'logFeedbackNegativo',
-                    question: ultimaPergunta,
-                    sourceRow: ultimaLinhaDaFonte,
-                    email: dadosAtendente.email,
-                    sugestao: sugestao
-                })
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${errorText}`);
-            }
-            const data = await response.json();
-            console.log('Resposta do feedback negativo:', data);
-            if (data.status === 'feedback_negativo_recebido') {
-                addMessage('Feedback negativo registrado com sucesso!', 'bot');
-            } else {
-                console.error('Resposta inválida do backend:', data);
-                addMessage('Erro ao registrar feedback negativo: ' + (data.mensagem || 'Resposta inválida do servidor'), 'bot');
-            }
-        } catch (error) {
-            console.error('Erro ao enviar feedback negativo:', error);
-            addMessage(`Erro ao enviar feedback negativo: ${error.message}. Verifique sua conexão ou tente novamente.`, 'bot');
-        }
-        feedbackContainer.remove(); // Remove o formulário após envio
-    };
 
-    feedbackCancel.onclick = () => {
-        console.log('Cancelando feedback negativo');
-        feedbackContainer.remove(); // Remove o formulário
-    };
-}
         // Buscar resposta do backend
         async function buscarResposta(textoDaPergunta) {
             ultimaPergunta = textoDaPergunta;
@@ -447,55 +448,86 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Enviar mensagem
+        // Enviar mensagem com debounce
         function handleSendMessage(text) {
+            if (isSendingMessage) {
+                console.warn('Envio de mensagem em andamento, ignorando');
+                return;
+            }
+            isSendingMessage = true;
             const trimmedText = text.trim();
             if (!trimmedText) {
                 console.warn('Mensagem vazia, ignorando');
+                isSendingMessage = false;
                 return;
             }
             console.log('Enviando mensagem do usuário:', trimmedText);
             addMessage(trimmedText, 'user');
             buscarResposta(trimmedText);
             userInput.value = '';
+            setTimeout(() => {
+                isSendingMessage = false;
+            }, 500); // Debounce de 500ms
         }
 
-        // Listeners de eventos
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                console.log('Tecla Enter pressionada');
-                e.preventDefault();
+        // Configurar eventos apenas uma vez
+        function configurarEventos() {
+            // Remove listeners anteriores
+            const newSendButton = sendButton.cloneNode(true);
+            sendButton.parentNode.replaceChild(newSendButton, sendButton);
+            sendButton = newSendButton;
+
+            const newUserInput = userInput.cloneNode(true);
+            userInput.parentNode.replaceChild(newUserInput, userInput);
+            userInput = newUserInput;
+
+            // Adiciona novos listeners
+            sendButton.addEventListener('click', () => {
+                console.log('Botão de envio clicado');
                 handleSendMessage(userInput.value);
-            }
-        });
-
-        sendButton.addEventListener('click', () => {
-            console.log('Botão de envio clicado');
-            handleSendMessage(userInput.value);
-        });
-
-        document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
-            item.addEventListener('click', (e) => {
-                const pergunta = e.currentTarget.getAttribute('data-question');
-                console.log('Pergunta rápida clicada:', pergunta);
-                handleSendMessage(pergunta);
             });
-        });
 
-        document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
-            console.log('Expandindo/recolhendo perguntas adicionais');
-            e.currentTarget.classList.toggle('expanded');
-            const moreQuestions = document.getElementById('more-questions');
-            moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
-        });
+            userInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    console.log('Tecla Enter pressionada');
+                    e.preventDefault();
+                    handleSendMessage(userInput.value);
+                }
+            });
 
-        themeSwitcher.addEventListener('click', () => {
-            console.log('Alternando tema');
-            document.body.classList.toggle('dark-theme');
-            const isDark = document.body.classList.contains('dark-theme');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
-        });
+            // Perguntas rápidas
+            document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
+                const newItem = item.cloneNode(true);
+                item.parentNode.replaceChild(newItem, item);
+                newItem.addEventListener('click', (e) => {
+                    const pergunta = e.currentTarget.getAttribute('data-question');
+                    console.log('Pergunta rápida clicada:', pergunta);
+                    handleSendMessage(pergunta);
+                });
+            });
+
+            // Expandir/recolher FAQ
+            const expandableFaqHeader = document.getElementById('expandable-faq-header');
+            if (expandableFaqHeader) {
+                const newHeader = expandableFaqHeader.cloneNode(true);
+                expandableFaqHeader.parentNode.replaceChild(newHeader, expandableFaqHeader);
+                newHeader.addEventListener('click', (e) => {
+                    console.log('Expandindo/recolhendo perguntas adicionais');
+                    e.currentTarget.classList.toggle('expanded');
+                    const moreQuestions = document.getElementById('more-questions');
+                    moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
+                });
+            }
+
+            // Alternar tema
+            themeSwitcher.addEventListener('click', () => {
+                console.log('Alternando tema');
+                document.body.classList.toggle('dark-theme');
+                const isDark = document.body.classList.contains('dark-theme');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
+            });
+        }
 
         // Configurar tema inicial
         function setInitialTheme() {
@@ -515,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Exibindo mensagem de boas-vindas para:', primeiroNome);
         addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
         setInitialTheme();
+        configurarEventos();
     }
 
     // Inicia a aplicação
