@@ -318,53 +318,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Abrir overlay de feedback negativo
         function abrirFeedbackNegativo(container) {
-            console.log('Abrindo overlay de feedback negativo');
-            showFeedbackOverlay();
-            feedbackForm.onsubmit = async (e) => {
-                e.preventDefault();
-                const sugestao = feedbackComment.value.trim();
-                if (!sugestao) {
-                    console.warn('Sugestão vazia no feedback negativo');
-                    alert('Por favor, insira uma sugestão.');
-                    return;
-                }
-                console.log('Enviando feedback negativo:', { pergunta: ultimaPergunta, sugestao });
-                container.textContent = 'Obrigado!';
-                container.className = 'feedback-thanks';
-
-                try {
-                    const response = await fetch(BACKEND_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            action: 'logFeedbackNegativo',
-                            question: ultimaPergunta,
-                            sourceRow: ultimaLinhaDaFonte,
-                            email: dadosAtendente.email,
-                            sugestao: sugestao
-                        })
-                    });
-                    const data = await response.json();
-                    console.log('Resposta do feedback negativo:', data);
-                    if (data.status === 'feedback_negativo_recebido') {
-                        addMessage('Feedback negativo registrado com sucesso!', 'bot');
-                    } else {
-                        addMessage('Erro ao registrar feedback negativo: ' + data.mensagem, 'bot');
-                    }
-                } catch (error) {
-                    console.error('Erro ao enviar feedback negativo:', error);
-                    addMessage('Erro ao enviar feedback negativo. Verifique sua conexão.', 'bot');
-                }
-                hideFeedbackOverlay();
-            };
+    if (!feedbackOverlay || !feedbackForm || !feedbackComment || !feedbackCancel) {
+        console.error('Elementos do feedback negativo não encontrados:', { feedbackOverlay, feedbackForm, feedbackComment, feedbackCancel });
+        addMessage('Erro: Formulário de feedback não encontrado.', 'bot');
+        return;
+    }
+    if (!ultimaPergunta || !dadosAtendente || !dadosAtendente.email) {
+        console.error('Dados necessários para feedback ausentes:', { ultimaPergunta, dadosAtendente });
+        addMessage('Erro: Não foi possível enviar o feedback. Tente novamente após enviar uma pergunta.', 'bot');
+        return;
+    }
+    console.log('Abrindo overlay de feedback negativo');
+    showFeedbackOverlay();
+    feedbackForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const sugestao = feedbackComment.value.trim();
+        if (!sugestao) {
+            console.warn('Sugestão vazia no feedback negativo');
+            alert('Por favor, insira uma sugestão.');
+            return;
         }
-
-        // Fechar overlay de feedback negativo
-        feedbackCancel.onclick = () => {
-            console.log('Cancelando feedback negativo');
-            hideFeedbackOverlay();
-        };
-
+        console.log('Enviando feedback negativo:', { pergunta: ultimaPergunta, sourceRow: ultimaLinhaDaFonte, email: dadosAtendente.email, sugestao });
+        container.textContent = 'Obrigado!';
+        container.className = 'feedback-thanks';
+        try {
+            const response = await fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                mode: 'cors',
+                credentials: 'omit',
+                body: JSON.stringify({
+                    action: 'logFeedbackNegativo',
+                    question: ultimaPergunta,
+                    sourceRow: ultimaLinhaDaFonte,
+                    email: dadosAtendente.email,
+                    sugestao: sugestao
+                })
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+            const data = await response.json();
+            console.log('Resposta do feedback negativo:', data);
+            if (data.status === 'feedback_negativo_recebido') {
+                addMessage('Feedback negativo registrado com sucesso!', 'bot');
+            } else {
+                console.error('Resposta inválida do backend:', data);
+                addMessage('Erro ao registrar feedback negativo: ' + (data.mensagem || 'Resposta inválida do servidor'), 'bot');
+            }
+        } catch (error) {
+            console.error('Erro ao enviar feedback negativo:', error);
+            addMessage(`Erro ao enviar feedback negativo: ${error.message}. Verifique sua conexão ou tente novamente.`, 'bot');
+        }
+        hideFeedbackOverlay();
+    };
+    feedbackCancel.onclick = () => {
+        console.log('Cancelando feedback negativo');
+        hideFeedbackOverlay();
+    };
+}
         // Buscar resposta do backend
         async function buscarResposta(textoDaPergunta) {
             ultimaPergunta = textoDaPergunta;
