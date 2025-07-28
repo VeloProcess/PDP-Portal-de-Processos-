@@ -600,72 +600,13 @@ body.dark-theme::before {
     transform: scale(1.1);
 }
 
-/* --- ESTILOS COMPLETOS PARA O FEEDBACK --- */
-
-/* Container que agrupa os botões de feedback */
-.feedback-container {
-    display: flex;
-    justify-content: flex-end; /* Alinha os botões à direita */
-    align-items: center;
-    gap: var(--espaco-xs);
-    margin-top: var(--espaco-sm);
-    height: 28px; /* Altura fixa para evitar pulos de layout */
-}
-
-/* Estilo base para ambos os botões (like e dislike) */
-.feedback-btn {
-    background: transparent;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: all var(--transicao-rapida);
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-/* Efeito de destaque ao passar o mouse */
-.feedback-btn:hover {
-    opacity: 1;
-    transform: scale(1.2);
-    background: var(--cor-caixa-chat);
-}
-
-/* Classe adicionada via JS após o clique para indicar a seleção */
-.feedback-btn.active {
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-/* Cor específica para o botão de "like" quando ativo */
-.feedback-btn.positive.active {
-    color: var(--cor-sucesso);
-}
-
-/* Cor específica para o botão de "dislike" quando ativo */
-.feedback-btn.negative.active {
-    color: var(--cor-erro);
-}
-
-/* Estilo para a mensagem de "Obrigado!" que substitui os botões */
-.feedback-thanks {
-    font-size: 12px;
-    font-style: italic;
-    color: var(--cor-texto-secundario);
-}
-
-/* Formulário de feedback no chat */
+/* Estilos para o formulário no chat */
 .feedback-form-container {
     max-width: 85%;
     align-self: flex-start;
     margin-bottom: var(--espaco-md);
     animation: fadeIn var(--transicao-normal);
 }
-
 .feedback-form {
     background: var(--cor-balao-bot);
     padding: var(--espaco-md);
@@ -674,13 +615,11 @@ body.dark-theme::before {
     box-shadow: 0 1px 3px var(--cor-sombra);
     color: var(--cor-texto-principal);
 }
-
 .feedback-form h3 {
     margin: 0 0 var(--espaco-sm) 0;
     font-size: 16px;
     font-weight: 600;
 }
-
 .feedback-comment {
     width: 100%;
     padding: var(--espaco-sm);
@@ -693,18 +632,15 @@ body.dark-theme::before {
     color: var(--cor-texto-principal);
     font-size: 14px;
 }
-
 .feedback-comment:focus {
     border-color: var(--cor-azul-medio);
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 }
-
 .feedback-button-container {
     display: flex;
     justify-content: flex-end;
     gap: var(--espaco-sm);
 }
-
 .feedback-cancel, .feedback-send {
     padding: var(--espaco-sm) var(--espaco-md);
     border: none;
@@ -713,49 +649,39 @@ body.dark-theme::before {
     font-size: 14px;
     transition: all var(--transicao-rapida);
 }
-
 .feedback-cancel {
     background: var(--cor-borda);
     color: var(--cor-texto-principal);
 }
-
 .feedback-cancel:hover {
     background: var(--cor-azul-claro);
     color: white;
 }
-
 .feedback-send {
     background: var(--cor-azul-medio);
     color: white;
 }
-
 .feedback-send:hover {
     background: var(--cor-azul-escuro);
 }
-
 body.dark-theme .feedback-form {
     background: var(--cor-balao-bot);
 }
-
 body.dark-theme .feedback-comment {
     background: var(--cor-caixa-chat);
     color: var(--cor-texto-principal);
     border-color: var(--cor-borda);
 }
-
 body.dark-theme .feedback-cancel {
     background: var(--cor-borda);
     color: var(--cor-texto-principal);
 }
-
 body.dark-theme .feedback-cancel:hover {
     background: var(--cor-azul-claro);
 }
-
 body.dark-theme .feedback-send {
     background: var(--cor-azul-medio);
 }
-
 body.dark-theme .feedback-send:hover {
     background: var(--cor-azul-escuro);
 }
