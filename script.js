@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado, iniciando script.js às 02:18 PM -03, 28/07/2025');
+    console.log('DOM carregado, iniciando script.js às 02:27 PM -03, 28/07/2025');
     
     // ================== CONFIGURAÇÕES ==================
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzCW_nKJj_wmBNB7G5caNXXYnJhMdJVGS6lg3seFsys_43xWC4l4PbXDty5zKpOkq04/exec";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
@@ -414,6 +414,23 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         }
 
+        // Testar conectividade com o servidor
+        async function testServerConnectivity(url) {
+            try {
+                console.log('Testando conectividade com:', url);
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+                console.log('Teste de conectividade:', { status: response.status, statusText: response.statusText });
+                return { status: response.status, ok: response.ok };
+            } catch (error) {
+                console.error('Erro no teste de conectividade:', error);
+                return { status: null, error: error.message };
+            }
+        }
+
         // Buscar resposta do backend
         async function buscarResposta(textoDaPergunta) {
             if (isFetchingResponse) {
@@ -430,10 +447,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             console.log('Buscando resposta para:', textoDaPergunta);
             showTypingIndicator();
+
+            // Testar conectividade antes da requisição principal
+            const connectivity = await testServerConnectivity(BACKEND_URL);
+            if (!connectivity.ok && connectivity.status !== null) {
+                console.error('Servidor retornou erro:', connectivity);
+                addMessage(`Erro: Servidor retornou status ${connectivity.status}. Verifique a implantação do Google Apps Script.`, 'bot');
+                hideTypingIndicator();
+                isFetchingResponse = false;
+                return;
+            } else if (connectivity.error) {
+                console.error('Falha na conectividade:', connectivity.error);
+                addMessage('Erro: Não foi possível conectar ao servidor. Verifique sua rede ou a URL do backend.', 'bot');
+                hideTypingIndicator();
+                isFetchingResponse = false;
+                return;
+            }
+
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
                 console.log('URL da requisição:', url);
-                const response = await fetch(url, {
+                let response = await fetch(url, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                     mode: 'cors',
@@ -455,10 +489,24 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Erro ao buscar resposta:', error);
                 let errorMessage = 'Erro ao buscar resposta. Verifique sua conexão.';
-                if (error.message.includes('Failed to fetch')) {
+                if (error.message.includes('Failed to fetch') || error.message.includes('net::ERR_FAILED')) {
                     errorMessage = 'Falha na conexão com o servidor. Verifique a URL do backend ou a configuração de CORS.';
+                    // Tentar fallback com mode: 'no-cors'
+                    console.log('Tentando requisição com mode: no-cors');
+                    try {
+                        const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
+                        const fallbackResponse = await fetch(url, {
+                            method: 'GET',
+                            mode: 'no-cors'
+                        });
+                        console.log('Resposta no-cors:', fallbackResponse);
+                        errorMessage = 'Requisição enviada, mas não foi possível verificar a resposta devido a restrições de CORS. Verifique a implantação do Google Apps Script.';
+                    } catch (fallbackError) {
+                        console.error('Erro no fallback no-cors:', fallbackError);
+                        errorMessage = 'Falha total na conexão com o servidor. Tente outra rede ou verifique a implantação do Google Apps Script.';
+                    }
                 } else if (error.message.includes('CORS')) {
-                    errorMessage = 'Erro de CORS. Verifique a configuração do Google Apps Script.';
+                    errorMessage = 'Erro de CORS. Acesse a URL do backend diretamente no navegador para verificar a configuração.';
                 }
                 addMessage(errorMessage, 'bot');
             } finally {
