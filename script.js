@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado, iniciando script.js às 01:48 PM -03, 28/07/2025');
+    console.log('DOM carregado, iniciando script.js às 02:12 PM -03, 28/07/2025');
     
     // ================== CONFIGURAÇÕES ==================
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const appWrapper = document.querySelector('.app-wrapper');
     const errorMsg = document.getElementById('identificacao-error');
     const chatBox = document.getElementById('chat-box');
-    let userInput = document.getElementById('user-input');
-    let sendButton = document.getElementById('send-button');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
     const themeSwitcher = document.getElementById('theme-switcher');
     const questionSearch = document.getElementById('question-search');
 
     // Verificar existência dos elementos
-    if (!chatBox || !userInput || !sendButton || !identificacaoOverlay || !appWrapper) {
-        console.error('Elementos DOM essenciais não encontrados:', { chatBox, userInput, sendButton, identificacaoOverlay, appWrapper });
+    if (!chatBox || !userInput || !sendButton || !identificacaoOverlay || !appWrapper || !themeSwitcher || !questionSearch) {
+        console.error('Elementos DOM essenciais não encontrados:', { chatBox, userInput, sendButton, identificacaoOverlay, appWrapper, themeSwitcher, questionSearch });
         alert('Erro: Elementos da interface não encontrados. Verifique o HTML.');
         return;
     }
@@ -89,6 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Botão de login Google clicado');
                     tokenClient.requestAccessToken();
                 });
+            } else {
+                console.error('Botão de login Google não encontrado');
+                errorMsg.textContent = 'Erro: Botão de login não encontrado. Verifique o HTML.';
+                errorMsg.classList.remove('hidden');
             }
             verificarIdentificacao();
         }).catch(error => {
@@ -172,18 +176,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Abrindo Gemini em nova aba');
                 window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
             });
+        } else {
+            console.warn('Botão Gemini não encontrado');
         }
 
         // Filtro de busca de perguntas
-        questionSearch.addEventListener('input', (e) => {
-            console.log('Filtrando perguntas:', e.target.value);
-            const searchTerm = e.target.value.toLowerCase();
-            const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
-            questions.forEach(question => {
-                const text = question.textContent.toLowerCase();
-                question.classList.toggle('hidden', !text.includes(searchTerm));
+        if (questionSearch) {
+            questionSearch.addEventListener('input', (e) => {
+                console.log('Filtrando perguntas:', e.target.value);
+                const searchTerm = e.target.value.toLowerCase();
+                const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
+                questions.forEach(question => {
+                    const text = question.textContent.toLowerCase();
+                    question.classList.toggle('hidden', !text.includes(searchTerm));
+                });
             });
-        });
+        }
 
         // Indicador de digitação
         function showTypingIndicator() {
@@ -427,7 +435,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
                 if (!response.ok) {
                     throw new Error(`Erro de rede: ${response.status} ${response.statusText}`);
                 }
@@ -472,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Configurar eventos
         function configurarEventos() {
-            // Remove listeners antigos, mas evita clonagem para preservar DOM
+            // Remove listeners antigos
             userInput.removeEventListener('keydown', handleSendInput);
             sendButton.removeEventListener('click', handleSendClick);
 
@@ -494,7 +507,11 @@ document.addEventListener('DOMContentLoaded', () => {
             sendButton.addEventListener('click', handleSendClick);
 
             // Perguntas rápidas
-            document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
+            const questionLists = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
+            if (questionLists.length === 0) {
+                console.warn('Nenhuma pergunta rápida encontrada');
+            }
+            questionLists.forEach(item => {
                 // Remove listeners antigos
                 const newItem = item.cloneNode(true);
                 item.parentNode.replaceChild(newItem, item);
@@ -508,14 +525,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // Expandir/recolher FAQ
             const expandableFaqHeader = document.getElementById('expandable-faq-header');
             if (expandableFaqHeader) {
-                const newHeader = expandableFaqHeader.cloneNode(true);
-                expandableFaqHeader.parentNode.replaceChild(newHeader, expandableFaqHeader);
-                newHeader.addEventListener('click', (e) => {
+                expandableFaqHeader.addEventListener('click', (e) => {
                     console.log('Expandindo/recolhendo perguntas adicionais');
                     e.currentTarget.classList.toggle('expanded');
-                    const moreQuestions = document.getElementById('controle');
-                    moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
+                    const moreQuestions = document.getElementById('more-questions');
+                    if (moreQuestions) {
+                        moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
+                    } else {
+                        console.warn('Elemento #more-questions não encontrado');
+                    }
                 });
+            } else {
+                console.warn('Elemento #expandable-faq-header não encontrado');
             }
 
             // Alternar tema
@@ -524,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.toggle('dark-theme');
                 const isDark = document.body.classList.contains('dark-theme');
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                themeSwitcher.innerHTML = '<span class="material-icons-outlined">' + (isDark ? 'dark_mode' : 'light_mode') + '</span>';
+                themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
             });
         }
 
@@ -533,19 +554,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-theme');
-                themeSwitcher.innerHTML = '<span class="material-icons-outlined">☀️</span>';
+                themeSwitcher.innerHTML = '🌙';
             } else {
                 document.body.classList.remove('dark-theme');
-                themeSwitcher.innerHTML = '<span class="material-icons-outlined">🌙</span>';
+                themeSwitcher.innerHTML = '☀️';
             }
             console.log('Tema inicial configurado:', savedTheme || 'light');
         }
 
         // Mensagem de boas-vindas
         if (!welcomeMessageSent) {
-            const primeiroNome = dadosAtendente.nome.split(' ')[0];
+            const primeiroNome = dadosAtendente.nome ? dadosAtendente.nome.split(' ')[0] : 'Usuário';
             console.log('Exibindo mensagem de boas-vindas para:', primeiroNome);
-            addMessage(`Olá, ${primeiroNome}!`, 'bot');
+            addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
         }
 
         setInitialTheme();
@@ -555,4 +576,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicia a aplicação
     console.log('Iniciando aplicação');
     initGoogleSignIn();
-});
+}, { once: true }); // Garante que o DOMContentLoaded seja registrado apenas uma vez
