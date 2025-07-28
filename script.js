@@ -228,60 +228,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Adicionar mensagem ao chat
-        function addMessage(message, sender, options = {}) {
-            const { sourceRow = null } = options;
-            console.log('Adicionando mensagem:', { message, sender, sourceRow });
-            const messageContainer = document.createElement('div');
-            messageContainer.classList.add('message-container', sender);
-            const avatarDiv = `<div class="avatar">${sender === 'user' ? '👤' : '🤖'}</div>`;
-            const messageContentDiv = `<div class="message-content"><div class="message bot-msg">${message.replace(/\n/g, '<br>')}</div></div>`;
-            messageContainer.innerHTML = sender === 'user' ? messageContentDiv + avatarDiv : avatarDiv + messageContentDiv;
-            chatBox.appendChild(messageContainer);
+       function addMessage(message, sender, options = {}) {
+    // Evita mensagens duplicadas idênticas
+    const lastMessage = chatBox.querySelector('.message-container:last-child .message')?.textContent;
+    if (lastMessage === message) {
+        console.warn('Mensagem duplicada ignorada:', message);
+        return;
+    }
 
-            if (sender === 'bot' && sourceRow) {
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.title = 'Copiar resposta';
-                copyBtn.innerHTML = '📋';
-                copyBtn.onclick = () => {
-                    const textToCopy = messageContainer.querySelector('.message').textContent;
-                    console.log('Botão de cópia clicado, texto:', textToCopy);
-                    copiarTextoParaClipboard(textToCopy).then(success => {
-                        if (success) {
-                            copyBtn.innerHTML = '✅';
-                            copyBtn.classList.add('copied');
-                            setTimeout(() => {
-                                copyBtn.innerHTML = '📋';
-                                copyBtn.classList.remove('copied');
-                            }, 2000);
-                        } else {
-                            alert('Não foi possível copiar o texto.');
-                        }
-                    });
-                };
-                messageContainer.querySelector('.message').appendChild(copyBtn);
+    const messageContainer = document.createElement('div');
+    messageContainer.className = `message-container ${sender}`;
+    const avatar = document.createElement('span');
+    avatar.className = `avatar ${sender}`;
+    avatar.textContent = sender === 'user' ? '👤' : '🤖';
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message';
+    messageElement.textContent = message;
+    messageContent.appendChild(messageElement);
 
-                const feedbackContainer = document.createElement('div');
-                feedbackContainer.className = 'feedback-container';
-                const positiveBtn = document.createElement('button');
-                positiveBtn.className = 'feedback-btn';
-                positiveBtn.innerHTML = '👍';
-                positiveBtn.title = 'Resposta útil';
-                positiveBtn.onclick = () => enviarFeedbackPositivo(feedbackContainer);
-                const negativeBtn = document.createElement('button');
-                negativeBtn.className = 'feedback-btn';
-                negativeBtn.innerHTML = '👎';
-                negativeBtn.title = 'Resposta incorreta';
-                negativeBtn.onclick = () => abrirFeedbackNegativo(feedbackContainer);
-                feedbackContainer.appendChild(positiveBtn);
-                feedbackContainer.appendChild(negativeBtn);
-                messageContainer.querySelector('.message-content').appendChild(feedbackContainer);
-            }
-            console.log('Rolando chat para a última mensagem');
-            setTimeout(() => {
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 100);
-        }
+    if (sender === 'bot' && !options.isTyping && !options.isFeedback) {
+        const feedbackContainer = document.createElement('div');
+        feedbackContainer.className = 'feedback-container';
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.innerHTML = '📋';
+        copyBtn.onclick = () => {
+            const textToCopy = messageElement.textContent;
+            console.log('Copiando texto:', textToCopy);
+            copiarTextoParaClipboard(textToCopy).then(success => {
+                if (success) {
+                    copyBtn.innerHTML = '✅';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '📋';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } else {
+                    alert('Não foi possível copiar o texto.');
+                }
+            });
+        };
+        const positiveFeedback = document.createElement('button');
+        positiveFeedback.className = 'feedback-btn positive emoji-icon';
+        positiveFeedback.innerHTML = '👍';
+        positiveFeedback.onclick = () => {
+            console.log('Feedback positivo registrado');
+            feedbackContainer.textContent = 'Obrigado!';
+            feedbackContainer.className = 'feedback-thanks';
+            enviarFeedback('positivo', messageContainer);
+        };
+        const negativeFeedback = document.createElement('button');
+        negativeFeedback.className = 'feedback-btn negative emoji-icon';
+        negativeFeedback.innerHTML = '👎';
+        negativeFeedback.onclick = () => {
+            console.log('Abrindo formulário de feedback negativo');
+            abrirFeedbackNegativo(feedbackContainer);
+        };
+        feedbackContainer.append(copyBtn, positiveFeedback, negativeFeedback);
+        messageContent.appendChild(feedbackContainer);
+    }
+
+    messageContainer.append(avatar, messageContent);
+    chatBox.appendChild(messageContainer);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
         // Enviar feedback positivo
         async function enviarFeedbackPositivo(container) {
