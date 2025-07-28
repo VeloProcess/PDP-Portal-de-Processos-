@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTyping = false;
     let dadosAtendente = null;
     let tokenClient = null;
+    let lastMessageTimestamp = 0; // Controle de duplicação por tempo
     let isSendingMessage = false; // Controle para debounce
 
     // ================== FUNÇÕES DE CONTROLE DE UI ==================
@@ -219,13 +220,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Adicionar mensagem ao chat
         function addMessage(message, sender, options = {}) {
+            const currentTime = Date.now();
             // Evita mensagens duplicadas
             const lastMessage = chatBox.querySelector('.message-container:last-child .message')?.textContent;
             const lastSender = chatBox.querySelector('.message-container:last-child')?.classList.contains(sender);
-            if (lastMessage === message && lastSender) {
-                console.warn('Mensagem duplicada ignorada:', message);
+            if (lastMessage === message && lastSender && (currentTime - lastMessageTimestamp < 500)) {
+                console.warn('Mensagem duplicada ignorada:', { message, sender, timeDiff: currentTime - lastMessageTimestamp });
                 return;
             }
+            lastMessageTimestamp = currentTime;
 
             const messageContainer = document.createElement('div');
             messageContainer.className = `message-container ${sender}`;
@@ -268,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Feedback positivo registrado');
                     feedbackContainer.textContent = 'Obrigado!';
                     feedbackContainer.className = 'feedback-thanks';
-                    enviarFeedback('positivo', messageContainer);
+                    enviarFeedback('positivo', feedbackContainer);
                 };
                 const negativeFeedback = document.createElement('button');
                 negativeFeedback.className = 'feedback-btn negative emoji-icon';
@@ -286,16 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        // Enviar feedback positivo
+        // Enviar feedback
         async function enviarFeedback(tipo, container) {
-            if (!ultimaPergunta) {
-                console.warn('Nenhuma pergunta para feedback');
+            if (!ultimaPergunta || !dadosAtendente || !dadosAtendente.email) {
+                console.error('Dados necessários para feedback ausentes:', { ultimaPergunta, dadosAtendente });
+                addMessage('Erro: Não foi possível enviar o feedback. Tente novamente após enviar uma pergunta.', 'bot');
                 return;
             }
-            console.log(`Enviando feedback ${tipo}:`, ultimaPergunta);
-            container.textContent = 'Obrigado!';
-            container.className = 'feedback-thanks';
-
+            console.log(`Enviando feedback ${tipo}:`, { pergunta: ultimaPergunta, sourceRow: ultimaLinhaDaFonte });
             try {
                 const response = await fetch(BACKEND_URL, {
                     method: 'POST',
@@ -307,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         question: ultimaPergunta,
                         sourceRow: ultimaLinhaDaFonte,
                         email: dadosAtendente.email,
-                        sugestao: tipo === 'negativo' ? feedbackComment?.value : undefined
+                        sugestao: tipo === 'negativo' ? container.querySelector('.feedback-comment')?.value : undefined
                     })
                 });
                 if (!response.ok) {
@@ -316,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const data = await response.json();
                 console.log(`Resposta do feedback ${tipo}:`, data);
-                if (data.status === `${tipo}_feedback_recebido`) {
+                if (data.status === `feedback_${tipo}_recebido`) {
                     addMessage(`Feedback ${tipo} registrado com sucesso!`, 'bot');
                 } else {
                     console.error(`Resposta inválida do backend para feedback ${tipo}:`, data);
@@ -377,36 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Enviando feedback negativo:', { pergunta: ultimaPergunta, sourceRow: ultimaLinhaDaFonte, email: dadosAtendente.email, sugestao });
                 container.textContent = 'Obrigado!';
                 container.className = 'feedback-thanks';
-                try {
-                    const response = await fetch(BACKEND_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        mode: 'cors',
-                        credentials: 'omit',
-                        body: JSON.stringify({
-                            action: 'logFeedbackNegativo',
-                            question: ultimaPergunta,
-                            sourceRow: ultimaLinhaDaFonte,
-                            email: dadosAtendente.email,
-                            sugestao: sugestao
-                        })
-                    });
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${errorText}`);
-                    }
-                    const data = await response.json();
-                    console.log('Resposta do feedback negativo:', data);
-                    if (data.status === 'feedback_negativo_recebido') {
-                        addMessage('Feedback negativo registrado com sucesso!', 'bot');
-                    } else {
-                        console.error('Resposta inválida do backend:', data);
-                        addMessage('Erro ao registrar feedback negativo: ' + (data.mensagem || 'Resposta inválida do servidor'), 'bot');
-                    }
-                } catch (error) {
-                    console.error('Erro ao enviar feedback negativo:', error);
-                    addMessage(`Erro ao enviar feedback negativo: ${error.message}. Verifique sua conexão ou tente novamente.`, 'bot');
-                }
+                await enviarFeedback('negativo', feedbackContainer);
                 feedbackContainer.remove();
             };
 
@@ -444,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Erro ao buscar resposta:', error);
                 hideTypingIndicator();
-                addMessage('Erro de conexão. Verifique se a URL do backend está correta.', 'bot');
+                addMessage('Erro de conexão. Verifique sua conexão ou a URL do backend.', 'bot');
             }
         }
 
@@ -472,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Configurar eventos apenas uma vez
         function configurarEventos() {
-            // Remove listeners anteriores
+            // Remove listeners anteriores clonando elementos
             const newSendButton = sendButton.cloneNode(true);
             sendButton.parentNode.replaceChild(newSendButton, sendButton);
             sendButton = newSendButton;
