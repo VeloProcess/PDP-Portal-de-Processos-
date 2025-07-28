@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ================== CONFIGURAÇÕES ==================
     // ⚠️ ATENÇÃO: Verifique se esta URL é a URL da sua ÚLTIMA implantação do Google Apps Script.
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycby5VaJxwhJayqOTvpri8ycl8CK-mgGK-T_zTmdzIpx-XjDJ6wzgnTa-57Z7TMOeX1yl/exec";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwbFPM6E6wUvNwSUjRXRQVDmyUu8aNaz-K6CJnJLM-xJfst1AnrQuYZll8jvyn327H4/exec";
     
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
