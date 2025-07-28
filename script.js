@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM carregado, iniciando script.js');
+    console.log('DOM carregado, iniciando script.js às 01:41 PM -03, 28/07/2025');
     
     // ================== CONFIGURAÇÕES ==================
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let dadosAtendente = null;
     let tokenClient = null;
     let lastMessageTimestamp = 0; // Controle de duplicação por tempo
-    let isSendingMessage = false; // Controle para debounce
+    let isSendingMessage = false; // Controle para debounce de mensagens do usuário
+    let isBotInitialized = false; // Controle para inicialização única do bot
+    let lastBotMessage = ''; // Controle para mensagens do bot
 
     // ================== FUNÇÕES DE CONTROLE DE UI ==================
     function showOverlay() {
@@ -140,7 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (dadosSalvos && dadosSalvos.email && dadosSalvos.email.endsWith(DOMINIO_PERMITIDO) && (Date.now() - dadosSalvos.timestamp < umDiaEmMs)) {
             console.log('Usuário já autenticado:', dadosSalvos.email);
             hideOverlay();
-            iniciarBot(dadosSalvos);
+            if (!isBotInitialized) {
+                iniciarBot(dadosSalvos);
+            }
         } else {
             console.log('Nenhum usuário autenticado encontrado');
             localStorage.removeItem('dadosAtendenteChatbot');
@@ -150,6 +154,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ================== FUNÇÃO PRINCIPAL DO BOT ==================
     function iniciarBot(dadosAtendente) {
+        if (isBotInitialized) {
+            console.warn('Bot já inicializado, ignorando nova inicialização');
+            return;
+        }
+        isBotInitialized = true;
         console.log('Iniciando bot para:', dadosAtendente.email);
 
         // Abrir Gemini em nova aba
@@ -222,6 +231,10 @@ document.addEventListener('DOMContentLoaded', () => {
         function addMessage(message, sender, options = {}) {
             const currentTime = Date.now();
             // Evita mensagens duplicadas
+            if (sender === 'bot' && lastBotMessage === message && (currentTime - lastMessageTimestamp < 1000)) {
+                console.warn('Mensagem do bot duplicada ignorada:', { message, timeDiff: currentTime - lastMessageTimestamp });
+                return;
+            }
             const lastMessage = chatBox.querySelector('.message-container:last-child .message')?.textContent;
             const lastSender = chatBox.querySelector('.message-container:last-child')?.classList.contains(sender);
             if (lastMessage === message && lastSender && (currentTime - lastMessageTimestamp < 500)) {
@@ -229,6 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             lastMessageTimestamp = currentTime;
+            if (sender === 'bot') {
+                lastBotMessage = message;
+            }
 
             const messageContainer = document.createElement('div');
             messageContainer.className = `message-container ${sender}`;
@@ -389,11 +405,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Buscar resposta do backend
+        let isFetchingResponse = false; // Controle para evitar múltiplas requisições
         async function buscarResposta(textoDaPergunta) {
+            if (isFetchingResponse) {
+                console.warn('Requisição de resposta em andamento, ignorando');
+                return;
+            }
+            isFetchingResponse = true;
             ultimaPergunta = textoDaPergunta;
             ultimaLinhaDaFonte = null;
             if (!textoDaPergunta.trim()) {
                 console.warn('Pergunta vazia, ignorando');
+                isFetchingResponse = false;
                 return;
             }
             console.log('Buscando resposta para:', textoDaPergunta);
@@ -417,6 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Erro ao buscar resposta:', error);
                 hideTypingIndicator();
                 addMessage('Erro de conexão. Verifique sua conexão ou a URL do backend.', 'bot');
+            } finally {
+                isFetchingResponse = false;
             }
         }
 
