@@ -1,24 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ================== CONFIGURAÇÕES ==================
+    // ⚠️ ATENÇÃO: Verifique se esta URL é a URL da sua ÚLTIMA implantação do Google Apps Script.
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycby4dwlNQkwQzuNEmEsrlZVvbKfdcxE2RP2kUPxxiOgIThe-mP4ZIXLaPY_EZQ-mcq7Q/exec";
+    
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
-
-    // Respostas estáticas de fallback (usadas se o fetch falhar)
-    const FALLBACK_RESPONSES = {
-        "e-mail de procuração, o que dizer?": "Por favor, envie um e-mail formal com o modelo de procuração fornecido pela Velotax, incluindo os dados do cliente e a assinatura digital. Consulte a base de conhecimento interna para o modelo exato.",
-        "quero fazer a exclusão da minha conta": "Para excluir sua conta, envie uma solicitação formal ao suporte da Velotax com seu CPF e motivo da exclusão. O processo será concluído em até 7 dias úteis.",
-        "problema no login do app": "Tente redefinir sua senha no aplicativo. Se o problema persistir, entre em contato com o suporte técnico pelo e-mail suporte@velotax.com.br.",
-        "informação sobre os valores da restituição": "Os valores da restituição dependem da sua declaração de IR. Consulte o status no app da Velotax ou entre em contato com o suporte financeiro.",
-        "retenção da chave pix": "A retenção da chave PIX pode ocorrer por inconsistências cadastrais. Verifique seus dados no app e contate o suporte financeiro para regularização.",
-        "juros": "Os juros aplicados seguem as regras da Receita Federal. Para detalhes, consulte a seção financeira da base de conhecimento interna.",
-        "desconto proporcional": "O desconto proporcional é calculado com base no período de uso do serviço. Consulte o suporte financeiro para mais informações.",
-        "qual o prazo para a restituição?": "O prazo para restituição é de até 60 dias após a aprovação da Receita Federal. Verifique o status no app.",
-        "como fazer estorno?": "O estorno deve ser solicitado pelo cliente via e-mail ao suporte financeiro, com justificativa e comprovantes. O prazo é de 5 dias úteis.",
-        "portabilidade": "A portabilidade pode ser solicitada no app da Velotax. Consulte o suporte técnico para orientações detalhadas.",
-        "o que fazer se caí na malha fina?": "Se caiu na malha fina, regularize sua situação na Receita Federal. Consulte o suporte técnico da Velotax para orientações.",
-        "como declarar investimentos?": "Declare seus investimentos no app da Velotax, na seção 'Investimentos'. Consulte a base de conhecimento para exemplos."
-    };
 
     // ================== ELEMENTOS DO DOM ==================
     const identificacaoOverlay = document.getElementById('identificacao-overlay');
@@ -80,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             verificarIdentificacao();
         }).catch(error => {
             errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
-            errorMsg.classList.remove('hidden');
+            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
         });
     }
 
@@ -100,12 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 iniciarBot(dadosAtendente);
             } else {
                 errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-                errorMsg.classList.remove('hidden');
+                errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
             }
         })
         .catch(error => {
             errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
-            errorMsg.classList.remove('hidden');
+            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
         });
     }
 
@@ -131,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ================== FUNÇÃO PRINCIPAL DO BOT ==================
     function iniciarBot(dadosAtendente) {
+        // Elementos do DOM do bot
         const chatBox = document.getElementById('chat-box');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
@@ -142,15 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
             window.open('https://gemini.google.com/app?hl=pt-BR', '_blank');
         });
 
+        // Filtro de busca de perguntas
         questionSearch.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
             questions.forEach(question => {
                 const text = question.textContent.toLowerCase();
+                // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
                 question.classList.toggle('hidden', !text.includes(searchTerm));
             });
         });
 
+        // Indicador de digitação
         function showTypingIndicator() {
             if (isTyping) return;
             isTyping = true;
@@ -168,14 +158,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typingIndicator) typingIndicator.remove();
         }
 
+        // Função para copiar texto para a área de transferência
         async function copiarTextoParaClipboard(texto) {
             try {
                 await navigator.clipboard.writeText(texto);
                 return true;
             } catch (err) {
+                // Fallback para navegadores mais antigos
                 const textArea = document.createElement("textarea");
                 textArea.value = texto;
-                textArea.className = 'clipboard-helper';
+                // CORRIGIDO (CSP): Usa classe em vez de estilo inline
+                textArea.className = 'clipboard-helper'; 
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
@@ -190,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Adicionar mensagem ao chat
         function addMessage(message, sender, options = {}) {
             const { sourceRow = null } = options;
             const messageContainer = document.createElement('div');
@@ -240,8 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // Enviar feedback
         async function enviarFeedback(action, container) {
             if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
+            // CORRIGIDO (CSP): Usa classe em vez de estilo inline
             container.textContent = 'Obrigado!';
             container.className = 'feedback-thanks';
 
@@ -257,29 +253,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
             } catch (error) {
-                console.error("Erro ao enviar feedback:", error);
+                // Silenciar erro de feedback
             }
         }
 
+        // Buscar resposta do backend
         async function buscarResposta(textoDaPergunta) {
             ultimaPergunta = textoDaPergunta;
             ultimaLinhaDaFonte = null;
             if (!textoDaPergunta.trim()) return;
             showTypingIndicator();
-
-            // Tenta usar o backend
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                console.log("Tentando fetch para:", url); // Log para debug
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                const response = await fetch(url); // Removido o method/headers desnecessários para um GET simples
                 hideTypingIndicator();
+
                 if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                    throw new Error(`Erro de rede ou CORS: ${response.status}`);
                 }
                 const data = await response.json();
                 
@@ -287,20 +277,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
                 } else {
-                    throw new Error(data.mensagem || "Erro ao processar a pergunta no backend.");
+                    addMessage(data.mensagem || "Ocorreu um erro ao processar sua pergunta.", 'bot');
                 }
             } catch (error) {
-                console.error("Erro ao conectar ao backend:", error, "URL:", url);
                 hideTypingIndicator();
-
-                // Fallback para respostas estáticas
-                const normalizedQuestion = textoDaPergunta.toLowerCase().trim();
-                const fallbackResponse = FALLBACK_RESPONSES[normalizedQuestion] || 
-                    "Desculpe, não consegui conectar ao servidor. Tente novamente ou consulte a base de conhecimento interna.";
-                addMessage(fallbackResponse, 'bot', { sourceRow: null });
+                addMessage("Erro de conexão. Verifique se a URL do Backend está correta e se o script foi reimplantado. Detalhes no console (F12).", 'bot');
+                console.error("Detalhes do erro de fetch:", error);
             }
         }
 
+        // Enviar mensagem
         function handleSendMessage(text) {
             const trimmedText = text.trim();
             if (!trimmedText) return;
@@ -309,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userInput.value = '';
         }
 
+        // Listeners de eventos
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -324,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
             const moreQuestions = document.getElementById('more-questions');
+            // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
             moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
         });
         
@@ -334,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
         });
 
+        // Configurar tema inicial
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
@@ -345,10 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Mensagem de boas-vindas
         const primeiroNome = dadosAtendente.nome.split(' ')[0];
         addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
         setInitialTheme();
     }
 
+    // Inicia a aplicação
     initGoogleSignIn();
 });
