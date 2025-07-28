@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <!-- CSP ajustada: libera fetch para Google APIs e Apps Script -->
+    <!-- Removido Material Icons, pois script.js usa emojis -->
     <meta http-equiv="Content-Security-Policy"
       content="default-src 'self';
                img-src 'self' https://github.com https://raw.githubusercontent.com https://www.google.com;
@@ -77,26 +76,12 @@
             </div>
         </div>
 
-        <div id="feedback-overlay" class="hidden">
-    <div id="feedback-box">
-        <h2>Melhorar esta Resposta</h2>
-        <p>Obrigado pelo seu feedback! Por favor, nos diga o que estava errado ou o que estava faltando na resposta.</p>
-        <form id="feedback-form">
-            <textarea id="feedback-comment" placeholder="Ex: A resposta está desatualizada, o link está quebrado, a informação correta é..." required></textarea>
-            <div class="feedback-form-buttons">
-                <button type="button" id="feedback-cancel">Cancelar</button>
-                <button type="submit" id="feedback-send">Enviar Feedback</button>
-            </div>
-        </form>
-    </div>
-</div>
-
         <div class="chat-container panel">
             <div class="chat-header">
                 <img src="https://github.com/VeloProcess/PDP-Portal-de-Processos-/blob/main/unnamed%20(2).png?raw=true" alt="Logo" class="chat-logo">
                 <h2 class="chat-title">Assistente Virtual <span class="status-indicator"></span></h2>
                 <p class="chat-subtitle">Seu assistente para processos internos</p> 
-                <button id="theme-switcher" title="Alterar tema">☀️</button>
+                <button id="theme-switcher" title="Alterar tema"></button> <!-- Removido emoji hardcoded -->
             </div>
             <div class="chat-box" id="chat-box"></div>
             <div class="input-area">
