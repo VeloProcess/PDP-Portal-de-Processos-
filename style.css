@@ -66,7 +66,6 @@ body.dark-theme {
     --cor-info: #1976D2;
 }
 
-
 /* --- 🌐 ESTILOS GLOBAIS E FUNDO 🌐 --- */
 body {
     font-family: 'Segoe UI', 'Arial', sans-serif;
@@ -198,7 +197,7 @@ body.dark-theme::before {
 
 /* Posição do botão de tema no cabeçalho novo */
 #theme-switcher {
-    font-size: 28px; /* ou o tamanho que preferir */
+    font-size: 28px;
     background: none;
     border: none;
     padding: 0;
@@ -249,7 +248,7 @@ body.dark-theme::before {
     font-size: 15px;
     outline: none;
     transition: var(--transicao-normal);
-    padding-right: 48px; /* Espaço para botões */
+    padding-right: 48px;
 }
 #user-input:focus {
     border-color: var(--cor-azul-medio);
@@ -281,7 +280,7 @@ body.dark-theme::before {
 }
 
 .gemini-button {
-    background-color: #FF6D00; /* Cor laranja Gemini */
+    background-color: #FF6D00;
     color: white;
     font-size: 18px;
     font-weight: bold;
@@ -289,7 +288,6 @@ body.dark-theme::before {
 .gemini-button:hover {
     background-color: #E65100;
 }
-
 
 /* --- 🗨️ ESTILOS DAS MENSAGENS 🗨️ --- */
 .message-container {
@@ -370,7 +368,6 @@ body.dark-theme::before {
 .typing-dot:nth-child(1) { animation-delay: 0s; }
 .typing-dot:nth-child(2) { animation-delay: 0.2s; }
 .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
 
 /* --- ❓ PAINEL DE PERGUNTAS (SIDEBAR) ❓ --- */
 .panel-header {
@@ -517,7 +514,6 @@ body.dark-theme::before {
     font-size: 12px;
 }
 
-
 /* --- ✨ ANIMAÇÕES E FOCO ✨ --- */
 :focus {
     outline: 2px solid var(--cor-foco);
@@ -559,6 +555,7 @@ body.dark-theme::before {
         display: none;
     }
 }
+
 /* --- CORREÇÃO PARA ÍCONES DE EMOJI --- */
 .emoji-icon {
     background: none !important;
@@ -566,13 +563,13 @@ body.dark-theme::before {
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    display: inline-block; /* Garante que o span se comporte bem */
+    display: inline-block;
 }
 
 /* Garante que o balão do bot seja a referência de posição */
 .bot-msg {
     position: relative; 
-    padding-right: 40px; /* Cria um espaço para o botão não sobrepor o texto */
+    padding-right: 40px;
 }
 
 /* Estilo do botão de copiar */
@@ -585,13 +582,13 @@ body.dark-theme::before {
     cursor: pointer;
     font-size: 18px;
     color: var(--cor-texto-principal);
-    opacity: 0; /* Começa invisível */
+    opacity: 0;
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 /* Efeito para o botão aparecer */
 .bot-msg:hover .copy-btn {
-    opacity: 0.6; /* Fica visível ao passar o mouse na mensagem */
+    opacity: 0.6;
 }
 
 /* Efeito de destaque no próprio botão */
@@ -606,7 +603,7 @@ body.dark-theme::before {
     width: 100%; height: 100%;
     background-color: rgba(0, 50, 100, 0.85);
     display: flex; justify-content: center; align-items: center;
-    z-index: 1001; /* Z-index maior que o da identificação */
+    z-index: 1001;
     backdrop-filter: blur(5px);
 }
 #feedback-box {
@@ -629,3 +626,18 @@ body.dark-theme::before {
 .feedback-form-buttons button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
 #feedback-cancel { background-color: #ddd; color: #333; }
 #feedback-send { background-color: var(--cor-sucesso); color: white; }
+
+/* --- ESTILOS PARA CLIPBOARD HELPER --- */
+.clipboard-helper {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+}
+
+/* --- ESTILOS PARA FEEDBACK THANKS --- */
+.feedback-thanks {
+    color: var(--cor-sucesso);
+    font-weight: bold;
+    text-align: center;
+    margin-top: var(--espaco-sm);
+}
