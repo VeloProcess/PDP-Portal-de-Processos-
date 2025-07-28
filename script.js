@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ================== CONFIGURAÇÕES ==================
     // ⚠️ ATENÇÃO: Após reimplantar o Google Apps Script, atualize esta URL com a nova URL gerada na implantação.
     // Exemplo: https://script.google.com/macros/s/SUA_NOVA_CHAVE/exec
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycby4dwlNQkwQzuNEmEsrlZVvbKfdcxE2RP2kUPxxiOgIThe-mP4ZIXLaPY_EZQ-mcq7Q/exec"; // Substitua com a nova URL após reimplantação
     
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
@@ -285,17 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideTypingIndicator();
                 addMessage(`Erro ao conectar ao servidor: ${error.message}. Verifique a URL do backend e sua conexão.`, 'bot');
                 console.error("Detalhes do erro de fetch:", error);
-                // Tentativa alternativa com mode: 'no-cors' para depuração
-                try {
-                    const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                    const response = await fetch(url, {
-                        method: 'GET',
-                        mode: 'no-cors'
-                    });
-                    addMessage("Tentativa alternativa (no-cors) realizada, mas a resposta não pode ser lida devido a restrições de CORS. Verifique a implantação do Google Apps Script.", 'bot');
-                } catch (noCorsError) {
-                    console.error("Erro na tentativa no-cors:", noCorsError);
-                }
             }
         }
 
