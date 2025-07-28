@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM carregado, iniciando script.js às 02:27 PM -03, 28/07/2025');
     
     // ================== CONFIGURAÇÕES ==================
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwEtOj37nlzcX3hHB0KqIjz8xAPt0wGke_6IHmQSlsk_2aPg_0GgEkXkE8ZuqRhIswy/exec";
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
 
