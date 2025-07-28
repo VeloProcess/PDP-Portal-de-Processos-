@@ -318,18 +318,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Abrir overlay de feedback negativo
         function abrirFeedbackNegativo(container) {
-    if (!feedbackOverlay || !feedbackForm || !feedbackComment || !feedbackCancel) {
-        console.error('Elementos do feedback negativo não encontrados:', { feedbackOverlay, feedbackForm, feedbackComment, feedbackCancel });
-        addMessage('Erro: Formulário de feedback não encontrado.', 'bot');
-        return;
-    }
     if (!ultimaPergunta || !dadosAtendente || !dadosAtendente.email) {
         console.error('Dados necessários para feedback ausentes:', { ultimaPergunta, dadosAtendente });
         addMessage('Erro: Não foi possível enviar o feedback. Tente novamente após enviar uma pergunta.', 'bot');
         return;
     }
-    console.log('Abrindo overlay de feedback negativo');
-    showFeedbackOverlay();
+
+    console.log('Adicionando formulário de feedback no chat');
+    const feedbackFormHtml = `
+        <div class="feedback-form-container">
+            <div class="feedback-form">
+                <h3>Feedback</h3>
+                <textarea class="feedback-comment" placeholder="Digite sua sugestão" rows="4"></textarea>
+                <div class="feedback-button-container">
+                    <button type="button" class="feedback-cancel">Cancelar</button>
+                    <button type="submit" class="feedback-send">Enviar Feedback</button>
+                </div>
+            </div>
+        </div>
+    `;
+    const feedbackContainer = document.createElement('div');
+    feedbackContainer.innerHTML = feedbackFormHtml;
+    chatBox.appendChild(feedbackContainer);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const feedbackForm = feedbackContainer.querySelector('.feedback-form');
+    const feedbackComment = feedbackContainer.querySelector('.feedback-comment');
+    const feedbackCancel = feedbackContainer.querySelector('.feedback-cancel');
+    const feedbackSend = feedbackContainer.querySelector('.feedback-send');
+
     feedbackForm.onsubmit = async (e) => {
         e.preventDefault();
         const sugestao = feedbackComment.value.trim();
@@ -371,11 +388,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Erro ao enviar feedback negativo:', error);
             addMessage(`Erro ao enviar feedback negativo: ${error.message}. Verifique sua conexão ou tente novamente.`, 'bot');
         }
-        hideFeedbackOverlay();
+        feedbackContainer.remove(); // Remove o formulário após envio
     };
+
     feedbackCancel.onclick = () => {
         console.log('Cancelando feedback negativo');
-        hideFeedbackOverlay();
+        feedbackContainer.remove(); // Remove o formulário
     };
 }
         // Buscar resposta do backend
