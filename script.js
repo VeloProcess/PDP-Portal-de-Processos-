@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ================== CONFIGURAÇÕES ==================
-    // ⚠️ ATENÇÃO: Verifique se esta URL é a URL da sua ÚLTIMA implantação do Google Apps Script.
+    // ⚠️ ATENÇÃO: Após reimplantar o Google Apps Script, atualize esta URL com a nova URL gerada na implantação.
+    // Exemplo: https://script.google.com/macros/s/SUA_NOVA_CHAVE/exec
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
     
     const DOMINIO_PERMITIDO = "@velotax.com.br";
@@ -201,10 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     copiarTextoParaClipboard(textToCopy).then(success => {
                         if (success) {
                             copyBtn.innerHTML = '✅';
-                            copyBtn.classList.add('copied');
+                            copyBtn.classList.remove('copied');
                             setTimeout(() => {
                                 copyBtn.innerHTML = '📋';
-                                copyBtn.classList.remove('copied');
+                                copyBtn.classList.add('copied');
                             }, 2000);
                         } else {
                             alert('Não foi possível copiar o texto.');
@@ -227,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 negativeBtn.onclick = () => enviarFeedback('logFeedbackNegativo', feedbackContainer);
                 feedbackContainer.appendChild(positiveBtn);
                 feedbackContainer.appendChild(negativeBtn);
-                messageContainer.querySelector('.message-content').appendChild(feedbackContainer);
+                messageContainer.appendChild(feedbackContainer);
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -278,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
                 } else {
-                    addMessage(data.mensagem || "Ocorreu um erro ao processar sua pergunta.", 'bot');
+                    addMessage(data.mensagem || 'Ocorreu um erro ao processar a pergunta.', 'bot');
                 }
             } catch (error) {
                 hideTypingIndicator();
@@ -303,18 +304,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleSendMessage(userInput.value);
             }
         });
-        sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
-        
-        document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
-            item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
+        sendButton.addEventListener('click', () => {
+            handleSendMessage(userInput.value);
         });
-        
-        document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
+
+        document.querySelectorAll('#quick-questions-list li', '#more-questions-list-financeiro li', '#more-questions-list-tecnico li').forEach(item => {
+            item.addEventListener('click', (e) => {
+                handleSendMessage(e.currentTarget.getAttribute('data-question'));
+            });
+        });
+
+        document.getElementById('expandable-feq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
             const moreQuestions = document.getElementById('more-questions');
             moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
         });
-        
+
         themeSwitcher.addEventListener('click', () => {
             body.classList.toggle('dark-theme');
             const isDark = body.classList.contains('dark-theme');
@@ -322,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
         });
 
-        // Configurar tema inicial
+        // Configurações tema inicial
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
@@ -334,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Mensagem de boas-vindas
+        // Mensagem de bem-vindas
         const primeiroNome = dadosAtendente.nome.split(' ')[0];
         addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
         setInitialTheme();
