@@ -202,10 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     copiarTextoParaClipboard(textToCopy).then(success => {
                         if (success) {
                             copyBtn.innerHTML = '✅';
-                            copyBtn.classList.remove('copied');
+                            copyBtn.classList.add('copied');
                             setTimeout(() => {
                                 copyBtn.innerHTML = '📋';
-                                copyBtn.classList.add('copied');
+                                copyBtn.classList.remove('copied');
                             }, 2000);
                         } else {
                             alert('Não foi possível copiar o texto.');
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 negativeBtn.onclick = () => enviarFeedback('logFeedbackNegativo', feedbackContainer);
                 feedbackContainer.appendChild(positiveBtn);
                 feedbackContainer.appendChild(negativeBtn);
-                messageContainer.appendChild(feedbackContainer);
+                messageContainer.querySelector('.message-content').appendChild(feedbackContainer);
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ultimaLinhaDaFonte = data.sourceRow;
                     addMessage(data.resposta, 'bot', { sourceRow: data.sourceRow });
                 } else {
-                    addMessage(data.mensagem || 'Ocorreu um erro ao processar a pergunta.', 'bot');
+                    addMessage(data.mensagem || "Ocorreu um erro ao processar sua pergunta.", 'bot');
                 }
             } catch (error) {
                 hideTypingIndicator();
@@ -304,22 +304,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleSendMessage(userInput.value);
             }
         });
-        sendButton.addEventListener('click', () => {
-            handleSendMessage(userInput.value);
+        sendButton.addEventListener('click', () => handleSendMessage(userInput.value));
+        
+        document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li').forEach(item => {
+            item.addEventListener('click', (e) => handleSendMessage(e.currentTarget.getAttribute('data-question')));
         });
-
-        document.querySelectorAll('#quick-questions-list li', '#more-questions-list-financeiro li', '#more-questions-list-tecnico li').forEach(item => {
-            item.addEventListener('click', (e) => {
-                handleSendMessage(e.currentTarget.getAttribute('data-question'));
-            });
-        });
-
-        document.getElementById('expandable-feq-header').addEventListener('click', (e) => {
+        
+        document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
             const moreQuestions = document.getElementById('more-questions');
             moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
         });
-
+        
         themeSwitcher.addEventListener('click', () => {
             body.classList.toggle('dark-theme');
             const isDark = body.classList.contains('dark-theme');
@@ -327,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             themeSwitcher.innerHTML = isDark ? '🌙' : '☀️';
         });
 
-        // Configurações tema inicial
+        // Configurar tema inicial
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
@@ -339,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Mensagem de bem-vindas
+        // Mensagem de boas-vindas
         const primeiroNome = dadosAtendente.nome.split(' ')[0];
         addMessage(`Olá, ${primeiroNome}! Como posso te ajudar hoje?`, 'bot');
         setInitialTheme();
