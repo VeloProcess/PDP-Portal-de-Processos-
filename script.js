@@ -533,10 +533,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-theme');
-                themeSwitcher.innerHTML = '<span class="material-icons-outlined">dark_mode</span>';
+                themeSwitcher.innerHTML = '<span class="material-icons-outlined">☀️</span>';
             } else {
                 document.body.classList.remove('dark-theme');
-                themeSwitcher.innerHTML = '<span class="material-icons-outlined">light_mode</span>';
+                themeSwitcher.innerHTML = '<span class="material-icons-outlined">🌙</span>';
             }
             console.log('Tema inicial configurado:', savedTheme || 'light');
         }
