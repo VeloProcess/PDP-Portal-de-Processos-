@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ================== CONFIGURAÇÕES ==================
     // ⚠️ ATENÇÃO: Verifique se esta URL é a URL da sua ÚLTIMA implantação do Google Apps Script.
-    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbw7qXAVwwYQgBgn6INsSfuJG3ddxreUR3_aIEGiTwugly8lRB9VhDuy5ASL5kgAL-G3/exec";
+    const BACKEND_URL = "https://script.google.com/macros/s/AKfycbwIjm6GehKDPlMQTAkIpUkGBeQbQogwYKeJ7VPfX93Fso6MWvmy_b7y68qzVVw9DhRG/exec";
     
     const DOMINIO_PERMITIDO = "@velotax.com.br";
     const CLIENT_ID = '827325386401-ahi2f9ume9i7lc28lau7j4qlviv5d22k.apps.googleusercontent.com';
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             verificarIdentificacao();
         }).catch(error => {
             errorMsg.textContent = 'Erro ao carregar autenticação do Google. Verifique sua conexão ou tente novamente mais tarde.';
-            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
+            errorMsg.classList.remove('hidden');
         });
     }
 
@@ -86,12 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 iniciarBot(dadosAtendente);
             } else {
                 errorMsg.textContent = 'Acesso permitido apenas para e-mails @velotax.com.br!';
-                errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
+                errorMsg.classList.remove('hidden');
             }
         })
         .catch(error => {
             errorMsg.textContent = 'Erro ao verificar login. Tente novamente.';
-            errorMsg.classList.remove('hidden'); // CORRIGIDO (CSP)
+            errorMsg.classList.remove('hidden');
         });
     }
 
@@ -135,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const questions = document.querySelectorAll('#quick-questions-list li, #more-questions-list-financeiro li, #more-questions-list-tecnico li');
             questions.forEach(question => {
                 const text = question.textContent.toLowerCase();
-                // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
                 question.classList.toggle('hidden', !text.includes(searchTerm));
             });
         });
@@ -167,8 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fallback para navegadores mais antigos
                 const textArea = document.createElement("textarea");
                 textArea.value = texto;
-                // CORRIGIDO (CSP): Usa classe em vez de estilo inline
-                textArea.className = 'clipboard-helper'; 
+                textArea.className = 'clipboard-helper';
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
@@ -237,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Enviar feedback
         async function enviarFeedback(action, container) {
             if (!ultimaPergunta || !ultimaLinhaDaFonte) return;
-            // CORRIGIDO (CSP): Usa classe em vez de estilo inline
             container.textContent = 'Obrigado!';
             container.className = 'feedback-thanks';
 
@@ -265,11 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showTypingIndicator();
             try {
                 const url = `${BACKEND_URL}?pergunta=${encodeURIComponent(textoDaPergunta)}&email=${encodeURIComponent(dadosAtendente.email)}`;
-                const response = await fetch(url); // Removido o method/headers desnecessários para um GET simples
+                const response = await fetch(url);
                 hideTypingIndicator();
-
                 if (!response.ok) {
-                    throw new Error(`Erro de rede ou CORS: ${response.status}`);
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
                 }
                 const data = await response.json();
                 
@@ -281,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 hideTypingIndicator();
-                addMessage("Erro de conexão. Verifique se a URL do Backend está correta e se o script foi reimplantado. Detalhes no console (F12).", 'bot');
+                addMessage(`Erro ao conectar ao servidor: ${error.message}. Verifique a URL do backend e sua conexão.`, 'bot');
                 console.error("Detalhes do erro de fetch:", error);
             }
         }
@@ -311,7 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('expandable-faq-header').addEventListener('click', (e) => {
             e.currentTarget.classList.toggle('expanded');
             const moreQuestions = document.getElementById('more-questions');
-            // CORRIGIDO (CSP): Usa 'toggle' com a classe 'hidden'
             moreQuestions.classList.toggle('hidden', !e.currentTarget.classList.contains('expanded'));
         });
         
